@@ -1,0 +1,213 @@
+================================================================================
+セキュリティコードレビュー報告書
+================================================================================
+対象     : backend/ frontend/src/ render.yaml
+参照設計書: detail_design_p2_v0.4.md / basic_design_p2_v0.5.md
+実施日   : 2026-06-21
+レビュアー: Claude（ベテランエンジニア役）
+
+================================================================================
+■ サマリー
+================================================================================
+
+  評価         件数   主な内容
+  ────────────────────────────────────────────────────────────────
+  🔴 致命的    0件   —
+  🟡 要改善    4件   APIキー無検証起動・認証未検証ログイン・日付入力未検証・バージョン未固定
+  🟢 軽微      4件   非推奨API・env変数名衝突・href未検証・CORS過剰許可
+
+全体評価：製造着手・Renderデプロイ可能なレベル。致命的な脆弱性は検出されなかった。
+🟡4件は7-J-2（Render公開）までに対処推奨。
+
+================================================================================
+【🟡 要改善（4件）】
+================================================================================
+
+[YEL-01] ANTHROPIC_API_KEY / BALLDONTLIE_API_KEY が空でも起動時エラーにならない
+
+  対象ファイル: config.py L7-8
+
+  現状:
+    ANTHROPIC_API_KEY   = os.getenv("ANTHROPIC_API_KEY", "")  # 空文字でも通過
+    BALLDONTLIE_API_KEY = os.getenv("BALLDONTLIE_API_KEY", "")
+
+  SECRET_KEY / USERNAME / USER_PASSWORD はRuntimeErrorで起動バリデーションが
+  あるが（L61-74）、この2件は空文字のまま起動する。
+  結果として「デプロイ成功→バッチ実行→初めてエラー発覚」という遅延障害になる。
+  Renderの環境変数設定ミスを本番バッチ実行まで検出できない。
+
+  修正案:
+    if not ANTHROPIC_API_KEY:
+        raise RuntimeError("ANTHROPIC_API_KEY が未設定です。")
+    if not BALLDONTLIE_API_KEY:
+        raise RuntimeError("BALLDONTLIE_API_KEY が未設定です。")
+
+--------------------------------------------------------------------------------
+
+[YEL-02] /api/auth/login にレートリミットがない
+
+  対象ファイル: api/routes.py L42-51
+
+  detail_design_p2_v0.4.md に「ブルートフォース対策なし（設計判断・リスク受け入れ
+  記録済み）」とあり既知の受け入れリスクだが、実際のコードを見ると制限が一切ない
+  ことを改めて確認した。
+
+  Render Starter は1インスタンスであり、高頻度の総当たり攻撃を受けた場合に
+  レスポンス遅延が生じる可能性がある（DoS相当）。著作権法上の私的利用範囲でのみ
+  公開するという前提でリスクは低いが、運用後に公開URLが漏洩するケースを想定すると
+  最低限のIP別制限は将来的に検討余地がある。
+
+  対処案（将来的に）: slowapi（FastAPI向けrate limiter）を導入し、
+  /api/auth/login を「同一IPから10回/分」程度に制限する。
+  今フェーズでは設計どおりのリスク受け入れで問題なし（再確認・記録目的で掲載）。
+
+--------------------------------------------------------------------------------
+
+[YEL-03] /api/schedule の start_date / end_date に形式バリデーションがない
+
+  対象ファイル: api/routes.py L82-90
+
+  現状:
+    async def get_schedule(start_date: str, end_date: str, ...):
+        games = crud.get_game_schedule(start_date, end_date)
+
+  SQLAlchemy ORMのパラメータバインドによりSQLインジェクションは起きないが、
+  任意の文字列がそのまま文字列比較される（game_date >= start_date）。
+  "2099-99-99" や "" を渡すと意図しない全件取得になりえる。
+  認証済みユーザーのみアクセス可能なため実害は小さいが、防御的実装として
+  形式チェックを追加すべき。
+
+  修正案:
+    from datetime import date
+
+    def _parse_date(s: str) -> date:
+        try:
+            return date.fromisoformat(s)
+        except ValueError:
+            raise HTTPException(status_code=422, detail="日付はYYYY-MM-DD形式で指定してください")
+
+    @router.get("/schedule")
+    async def get_schedule(start_date: str, end_date: str, ...):
+        _parse_date(start_date)
+        _parse_date(end_date)
+        ...
+
+--------------------------------------------------------------------------------
+
+[YEL-04] render.yaml にPython/Nodeバージョンが未指定
+
+  対象ファイル: render.yaml L3（env: python）、L38（env: static）
+
+  現状、Pythonバージョン・Nodeバージョンのいずれも明示されていない。
+  Renderはデフォルトのバージョンを使用するが、デフォルト値はRenderの更新に
+  追随するため、将来のデプロイで突然Python 3.12+に上がりライブラリの
+  非互換が発生するリスクがある（特にjwt.py L11: datetime.utcnow() は3.12で非推奨）。
+
+  修正案（render.yaml に追記）:
+    # バックエンド
+    - type: web
+      env: python
+      runtime: python-3.11     ← 追加
+      ...
+
+    # フロントエンド（Node version）
+    # .nvmrc / .node-version ファイルをリポジトリルートに配置するか、
+    # Renderダッシュボードの環境変数で NODE_VERSION=20 を指定する
+
+================================================================================
+【🟢 軽微（4件）】
+================================================================================
+
+[GRN-01] jwt.py で datetime.utcnow() を使用している（Python 3.12+ で非推奨）
+
+  対象ファイル: auth/jwt.py L11
+
+  Python 3.12 から datetime.utcnow() はDeprecationWarningが出る。
+  scheduler.py や crud.py はすでに datetime.now(timezone.utc) を使っており
+  ファイル間で不統一。
+
+  修正案:
+    from datetime import datetime, timedelta, timezone
+    expire = datetime.now(timezone.utc) + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
+
+--------------------------------------------------------------------------------
+
+[GRN-02] config.py の USERNAME 環境変数名がOSの予約変数と衝突する可能性
+
+  対象ファイル: config.py L69
+
+  INIT_USERNAME = os.getenv("USERNAME", "")
+
+  macOSおよびWindowsでは USERNAME はOS標準の環境変数（ログインユーザー名）であり、
+  .env を未配置のまま開発機で起動した場合、空文字チェック（L71-74のRuntimeError）
+  をすり抜けてOSのユーザー名でDBユーザーが作成される可能性がある。
+  Renderではrender.yaml経由で明示的に設定されるため本番での影響なし。
+
+  修正案: 環境変数名を INIT_USERNAME / INIT_USER_PASSWORD に変更し、
+  render.yaml・.env.example も合わせて修正する。
+
+--------------------------------------------------------------------------------
+
+[GRN-03] NewsCard.jsx の source_url が href に未検証で入る
+
+  対象ファイル: frontend/src/components/NewsCard.jsx L94-101
+
+  article.source_url（RSSのlinkフィールドをそのままDBに保存した値）が
+  <a href={article.source_url}> に直接レンダリングされる。
+  Reactは文字列をエスケープするがhrefの javascript: スキームは
+  Reactの古いバージョン（~16.8以前）では実行可能だった。
+  現行のReact 18では警告のみで実際には実行されないため実害なし。
+  ただしRSSソースが信頼できなくなった場合の防衛策として一応記録する。
+
+  修正案（必須ではない）:
+    const safeUrl = /^https?:\/\//i.test(article.source_url)
+      ? article.source_url
+      : '#';
+    <a href={safeUrl} ...>
+
+--------------------------------------------------------------------------------
+
+[GRN-04] CORS allow_methods=["*"] / allow_headers=["*"] が過剰に広い
+
+  対象ファイル: main.py L35-38
+
+  実際に使用するメソッドは GET / POST / PUT のみ。
+  allow_credentials=True との組み合わせでブラウザはoriginチェックを行うため
+  実害はないが、原則最小権限の観点から明示的に列挙するほうが好ましい。
+
+  修正案:
+    allow_methods=["GET", "POST", "PUT"],
+    allow_headers=["Authorization", "Content-Type"],
+
+================================================================================
+■ セキュリティ上の陽性確認（問題なし）
+================================================================================
+
+  確認項目                                  | 判定
+  SECRET_KEY 未設定時の起動拒否             | ✅ RuntimeError（config.py L61-64）
+  パスワードのbcryptハッシュ化               | ✅ passlib CryptContext（users.py L5）
+  JWTのalg:none攻撃対策                    | ✅ algorithms=[JWT_ALGORITHM]で固定（jwt.py L19）
+  全保護エンドポイントへの認証適用           | ✅ 全6エンドポイントにDepends(get_current_user)
+  ログインエンドポイントのPOST強制           | ✅ @router.post("/auth/login")（routes.py L42）
+  パスワードのURLログ露出なし               | ✅ POSTボディ受信のため
+  SQLインジェクション                       | ✅ SQLAlchemy ORMのみ使用（生SQL一切なし）
+  JWTトークンのメモリ保持（localStorage禁止）| ✅ useState（useAuth.js L6）
+  dangerouslySetInnerHTML の不使用          | ✅ 全Reactコンポーネントで未使用
+  APIキーのハードコードなし                 | ✅ 全て os.getenv() 経由
+  render.yaml のsync:false適用             | ✅ 全シークレット5件
+  CORS オリジン固定（ワイルドカードなし）    | ✅ ALLOWED_ORIGINS環境変数（main.py L31）
+  RSS取得のfeedparser直接URL渡し禁止        | ✅ requests.get()経由（rss.py L17-23）
+  フロントエンドのrel="noopener noreferrer" | ✅ NewsCard.jsx L96
+
+================================================================================
+■ 総合判断
+================================================================================
+
+致命的な脆弱性は存在しない。設計どおりに実装されている箇所が多く、
+特に認証まわり（JWT・bcrypt・Bearer検証・全エンドポイント適用）は堅実。
+
+YEL-01（APIキー未検証起動）のみ7-J-2着手前に修正を推奨（config.py 3行追加で完結）。
+YEL-03・YEL-04は7-J-2作業の中で対応可能。YEL-02は将来的な検討事項として記録済み扱い。
+GRN-01〜04は任意対応。
+
+================================================================================
