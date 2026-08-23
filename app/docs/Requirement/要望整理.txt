@@ -6,3 +6,9 @@
 ・UI関連
     ・ニュースはタイトルだけ最初に表示して、クリックしたら表示できるようにしたい。
     ・お気に入りチームのフィルタの名前を「チーム」のみから「Spursのみ」に変更したい。
+
+・運用関連
+    ・トライアル運用と本番監視をClaudeのスケジュールタスクで行いたい。
+
+・セキュリティ関連
+    ・C:\Users\gimatakumi\Documents\projects\NBA_news\app\docs\Risk_Report\security_review_p2_v1.0.txtの改善内容の取り込み
