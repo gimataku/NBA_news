@@ -6,7 +6,7 @@
 - **対象**: NBAニュース翻訳アプリ 改修（フェーズ3）
 - **参照**:
   - 要件定義書 v0.12（`requirements_p2_v0.12.md`）※フェーズ2最終版
-  - プロジェクト計画書 v1.6（`project_plan_p3_v1.6.md`）
+  - プロジェクト計画書 v2.2（`project_plan_p3_v2.2.md`）
   - リスク調査書 v0.6（`risk_report_p3_v0.6.md`）※**版番号を書くのは本欄のみ**（§9冒頭の運用ルール参照）
   - 開発振り返りレビュー（`retrospective_p2_v1.1.md`）
   - セキュリティレビュー結果（`security_review_p2_v1.0.txt`）
