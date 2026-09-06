@@ -37,3 +37,12 @@
 | バックエンド | https://nba-news-backend-ppsd.onrender.com/api/status | — 自動確認不可 | Claudeサンドボックスのネットワーク制限により到達不可。ブラウザで {"detail":"Not authenticated"} が返れば正常稼働 |
 
 ---
+
+## 2026-09-01 21:23 JST
+
+| サービス | URL | 結果 | 備考 |
+|---|---|---|---|
+| フロントエンド | https://nba-news-frontend.onrender.com | ✅ UP | 200系（HTML応答・title取得あり） |
+| バックエンド | https://nba-news-backend-ppsd.onrender.com/api/status | — 自動確認不可 | Claudeサンドボックスのネットワーク制限により到達不可。ブラウザで {"detail":"Not authenticated"} が返れば正常稼働 |
+
+---
