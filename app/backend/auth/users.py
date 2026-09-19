@@ -2,6 +2,11 @@ from passlib.context import CryptContext
 
 from config import INIT_USER_PASSWORD, INIT_USERNAME
 
+if not INIT_USERNAME or not INIT_USER_PASSWORD:
+    raise RuntimeError(
+        "USERNAME / USER_PASSWORD が未設定です。環境変数に設定してください。"
+    )
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 

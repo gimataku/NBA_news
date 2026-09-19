@@ -4,6 +4,11 @@ from jose import JWTError, jwt
 
 from config import ACCESS_TOKEN_EXPIRE_DAYS, JWT_ALGORITHM, SECRET_KEY
 
+if not SECRET_KEY:
+    raise RuntimeError(
+        "SECRET_KEY が未設定です。openssl rand -hex 32 で生成し環境変数に設定してください。"
+    )
+
 
 def create_access_token(data: dict) -> str:
     """JWTトークンを発行する（有効期限30日）"""
