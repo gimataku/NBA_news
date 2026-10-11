@@ -31,7 +31,7 @@ services:
       # デプロイ後にフロントエンドの実際のURLに変更すること
       # 例: https://nba-news-frontend.onrender.com
       - key: ALLOWED_ORIGINS
-        value: https://YOUR_FRONTEND_URL.onrender.com
+        value: https://nba-news-frontend.onrender.com
 
   # ---------- フロントエンド Static Site ----------
   - type: web
@@ -43,7 +43,7 @@ services:
       # デプロイ後にバックエンドの実際のURLに変更すること
       # 例: https://nba-news-backend.onrender.com
       - key: VITE_API_BASE_URL
-        value: https://YOUR_BACKEND_URL.onrender.com
+        value: https://nba-news-backend-ppsd.onrender.com
     routes:
       - type: rewrite
         source: /*
