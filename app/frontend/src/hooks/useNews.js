@@ -14,6 +14,7 @@ export function useNews(token, onAuthError) {
     api_limit_exceeded: false,
     is_fallback: false,
     last_fetched_at: null,
+    metrics: null,          // 追加。未取得・旧APIのときは null
   });
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [spursOnly, setSpursOnly] = useState(false);

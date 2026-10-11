@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 
-from config import DATA_RETENTION_DAYS
+from config import DATA_RETENTION_DAYS, METRICS_WINDOW_DAYS
 from .models import AppSetting, Article, FetchLog, GameSchedule, SessionLocal, User
 
 
@@ -204,4 +204,48 @@ def _game_schedule_to_dict(row: GameSchedule) -> dict:
         "visitor_score": row.visitor_score,
         "has_score":    bool(row.has_score),
         "fetched_at":   row.fetched_at,
+    }
+
+
+def get_metrics() -> dict:
+    """
+    /api/status の metrics 用。要件定義書§4-1 の指標1・2・3・6・9 を返す。
+    指標7（ERROR件数）・8（Disk使用量）はAPIでは扱わない（基本設計書§6-1）。
+    """
+    cutoff = (
+        datetime.now(timezone.utc) - timedelta(days=METRICS_WINDOW_DAYS)
+    ).strftime("%Y-%m-%dT%H:%M:%S")
+
+    with SessionLocal() as session:
+        total = (
+            session.query(func.count(Article.id))
+            .filter(Article.is_duplicate == 0).scalar()
+        )
+        last_7d = (
+            session.query(func.count(Article.id))
+            .filter(Article.is_duplicate == 0)
+            .filter(Article.fetched_at >= cutoff).scalar()
+        )
+        by_category = dict(
+            session.query(Article.category, func.count(Article.id))
+            .filter(Article.is_duplicate == 0)
+            .filter(Article.fetched_at >= cutoff)
+            .group_by(Article.category).all()
+        )
+        duplicates = (
+            session.query(func.count(Article.id))
+            .filter(Article.is_duplicate == 1).scalar()
+        )
+        fallbacks = (
+            session.query(func.count(FetchLog.id))
+            .filter(FetchLog.is_fallback == 1)
+            .filter(FetchLog.executed_at >= cutoff).scalar()
+        )
+
+    return {
+        "total_articles":      total,
+        "articles_last_7d":    last_7d,
+        "by_category_7d":      {k: v for k, v in by_category.items() if k is not None},
+        "duplicate_count":     duplicates,
+        "fallback_history_7d": fallbacks,
     }

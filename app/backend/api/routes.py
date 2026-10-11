@@ -98,6 +98,7 @@ async def get_status(current_user: str = Depends(get_current_user)):
         "source_used":        log["source_used"] if log else None,
         "is_fallback":        log["is_fallback"] if log else False,
         "api_limit_exceeded": crud.get_setting("api_limit_exceeded") == "true",
+        "metrics":            crud.get_metrics(),
     }
 
 
