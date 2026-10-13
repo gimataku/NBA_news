@@ -3,6 +3,14 @@ import sqlite3
 
 DB_PATH = os.getenv("DATABASE_URL", "nba_news.db")
 
+# フェーズ3の移行後、DATABASE_URL は「接続URL全体」を意味する（詳細設計書§3-4）。
+# 本スクリプトは sqlite3.connect() にそのまま渡すため、URL形式を受け取ると
+# その文字列名のファイルを作成して「成功」してしまう。明示的に失敗させる。
+if "://" in DB_PATH:
+    raise SystemExit(
+        "DATABASE_URL が接続URL形式です。本スクリプトはフェーズ2のSQLite専用であり、"
+        "移行後の環境では実行できません。"
+    )
 
 def migrate():
     conn = sqlite3.connect(DB_PATH)
