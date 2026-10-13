@@ -84,6 +84,7 @@ class User(Base):
 # 旧コード
 DB_PATH = os.getenv("DATABASE_URL", "nba_news.db")
 engine  = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
+
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 _INITIAL_SETTINGS = [
