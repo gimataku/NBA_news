@@ -47,21 +47,30 @@ def healthz():
     return {"status": "ok"}
 
 
+def _scheduler_enabled() -> bool:
+    """ENABLE_SCHEDULER が "false"（大文字小文字不問）以外なら有効（未設定時は有効）"""
+    return os.getenv("ENABLE_SCHEDULER", "true").lower() != "false"
+
+
 @app.on_event("startup")
 def startup_event() -> None:
     init_db()
     logger.info("DB initialized")
     init_user(crud)
     logger.info("Initial user check completed")
-    scheduler.start()
-    logger.info("Scheduler started")
-    check_and_run_batch()
+    if _scheduler_enabled():
+        scheduler.start()
+        logger.info("Scheduler started")
+        check_and_run_batch()
+    else:
+        logger.info("Scheduler disabled (ENABLE_SCHEDULER=false)")
 
 
 @app.on_event("shutdown")
 def shutdown_event() -> None:
-    scheduler.shutdown()
-    logger.info("Scheduler stopped")
+    if _scheduler_enabled():
+        scheduler.shutdown()
+        logger.info("Scheduler stopped")
 
 
 if __name__ == "__main__":
