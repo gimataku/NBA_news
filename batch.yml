@@ -1,0 +1,28 @@
+name: NBA News Batch
+
+on:
+  # ⚠️ schedule は 7-A-10 で GitHub Secrets 登録＋手動実行の成功を確認した直後に有効化する
+  # schedule:
+  #   - cron: '0 21,1,5,9,13,17 * * *'    # UTC → JST 6/10/14/18/22/2時
+  workflow_dispatch:                      # 手動実行（/api/fetch の代替）
+
+jobs:
+  run-batch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: app/backend/requirements.txt
+      - run: pip install -r app/backend/requirements.txt
+      - name: Run batch
+        working-directory: app/backend
+        env:
+          ANTHROPIC_API_KEY:    ${{ secrets.ANTHROPIC_API_KEY }}
+          BALLDONTLIE_API_KEY:  ${{ secrets.BALLDONTLIE_API_KEY }}
+          DATABASE_URL:         ${{ secrets.DATABASE_URL }}
+          HEALTHCHECK_PING_URL: ${{ secrets.HEALTHCHECK_PING_URL }}
+        run: python run_batch_once.py
