@@ -3,14 +3,10 @@ services:
   - type: web
     name: nba-news-backend
     env: python
-    plan: starter
+    plan: free
     buildCommand: pip install -r app/backend/requirements.txt
     startCommand: cd app/backend && python main.py
     healthCheckPath: /healthz
-    disk:
-      name: nba-news-data
-      mountPath: /data
-      sizeGB: 1
     envVars:
       # シークレット（Renderダッシュボードで手動入力。このファイルには値を書かない）
       - key: ANTHROPIC_API_KEY
@@ -28,6 +24,8 @@ services:
         value: 0.0.0.0
       - key: DATABASE_URL
         sync: false
+      - key: ENABALE_SCHEDULER
+        value: "false"
       - key: ALLOWED_ORIGINS
         value: https://nba-news-frontend.onrender.com
 
