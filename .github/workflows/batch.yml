@@ -1,9 +1,8 @@
 name: NBA News Batch
 
 on:
-  # ⚠️ schedule は 7-A-10 で GitHub Secrets 登録＋手動実行の成功を確認した直後に有効化する
-  # schedule:
-  #   - cron: '0 21,1,5,9,13,17 * * *'    # UTC → JST 6/10/14/18/22/2時
+  schedule:
+    - cron: "0 21,1,5,9,13,17 * * *"
   workflow_dispatch:                      # 手動実行（/api/fetch の代替）
 
 jobs:
