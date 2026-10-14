@@ -16,3 +16,4 @@ pytest-cov
 pytest-mock
 responses
 psycopg[binary]
+slowapi

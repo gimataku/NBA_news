@@ -4,7 +4,10 @@ import os
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
+from api.limiter import limiter
 from api.routes import router as api_router
 from auth.users import init_user
 from db import crud
@@ -26,6 +29,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="NBA News JP")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS設定（ローカル開発時は localhost:5173、本番はALLOWED_ORIGINS環境変数で指定）
 _origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")
@@ -79,4 +84,6 @@ if __name__ == "__main__":
         host=os.getenv("HOST", "127.0.0.1"),
         port=int(os.getenv("PORT", 8000)),
         reload=False,
+        proxy_headers=True,
+        forwarded_allow_ips="*",
     )

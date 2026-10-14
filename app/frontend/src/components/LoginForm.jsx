@@ -10,8 +10,12 @@ export function LoginForm({ onLogin }) {
     setError(null);
     try {
       await onLogin(username, password);
-    } catch {
-      setError('ユーザー名またはパスワードが正しくありません');
+    } catch (e) {
+      setError(
+        e.status === 429
+          ? 'ログインの試行が多すぎます。1分ほど待ってから再試行してください。'
+          : 'ユーザー名またはパスワードが正しくありません'
+      );
     }
   };
 

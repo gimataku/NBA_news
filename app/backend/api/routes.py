@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
+from api.limiter import limiter
 from auth.jwt import create_access_token, verify_token
 from auth.users import authenticate_user
+from config import LOGIN_RATE_LIMIT
 from db import crud
 
 router = APIRouter()
@@ -39,7 +41,8 @@ class LoginBody(BaseModel):
 
 
 @router.post("/auth/login")
-async def login(body: LoginBody):
+@limiter.limit(LOGIN_RATE_LIMIT)
+async def login(request: Request, body: LoginBody):
     """
     ユーザー名・パスワードを検証してJWTトークンを返す。
     GETは不可（URLにパスワードが露出しアクセスログに残るリスクのため）。

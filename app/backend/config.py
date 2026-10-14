@@ -31,6 +31,9 @@ DATA_RETENTION_DAYS = 30
 # 運用指標（/api/status の metrics 集計期間）
 METRICS_WINDOW_DAYS = 7   # 週次チェックリストの周期と一致させる
 
+# レートリミット設定（F-17）
+LOGIN_RATE_LIMIT = "5/minute"
+
 # Spurs設定
 SPURS_TEAM_ID = 27
 SPURS_KEYWORDS = [

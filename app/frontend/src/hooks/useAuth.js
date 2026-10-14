@@ -12,7 +12,11 @@ export function useAuth() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
     });
-    if (!res.ok) throw new Error('ログインに失敗しました');
+    if (!res.ok) {
+      const err = new Error('ログインに失敗しました');
+      err.status = res.status;
+      throw err;
+    }
     const data = await res.json();
     setToken(data.access_token);
     setIsAuthenticated(true);

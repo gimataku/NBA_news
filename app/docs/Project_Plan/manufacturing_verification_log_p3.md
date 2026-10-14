@@ -744,19 +744,21 @@ def startup_event() -> None:
 
 ## 7-A-4：F-17 レートリミット ＋ `conftest.py` の改修
 
-**状態：⬜ 未実施**
+**状態：🔄 実装・ローカル検証 ✅（2026-10-15）／commit・push・本番確認（特に 9-2 の偽装バイパス）が残る｜前提 ✅**
 
 | 項目 | 内容 |
 |---|---|
 | 設計 | 詳細設計書§2-1-1（`slowapi`）・§2-4-2（`forwarded_allow_ips`）・§4-2-1（429のUI）・§2-6・§2-7 |
 | 変更対象 | `api/limiter.py`（新規）・`api/routes.py`・`main.py`・`config.py`・`requirements.txt`・`hooks/useAuth.js`・`components/LoginForm.jsx`・`tests/conftest.py` |
-| テスト | T-P3-01（TC-01-1〜6）・T-P3-14（TC-14-1〜5） |
+| テスト | T-P3-01（TC-01-1〜6）＝**本サブ手順で前倒し実装**（セキュリティ機能であり、`conftest.py` 改修の実証手段が他にない）／T-P3-14（TC-14-1〜5）＝**7-A-8（フロントのテスト基盤）の後** |
+| **指示文での追加判断（2026-10-15）** | ①`conftest.py` に **`DATABASE_URL` のダミー値を無条件代入**（7-A-10 の発見事項#1・テスト設計書 v0.7 への引き継ぎ分を先行して塞ぐ）。②設計書の `config.ENABLE_SCHEDULER` 定数方式は採らない（7-A-10c で `main._scheduler_enabled()` として実装済み。**詳細設計書§2-6・§2-4-3 と実装が異なる→詳細設計書 v0.5 で整合**）。③`routes.py` の import 例から `BackgroundTasks` を除く（7-A-11 で削除済み）。④🔴**本番確認に X-Forwarded-For 偽装のバイパス確認を追加**（下記） |
 
 | 項目 | 実施日 | 内容 | 結果 | 問題点 |
 |---|---|---|---|---|
-| 変更内容 | — | — | — | — |
-| 動作確認 | — | — | — | — |
-| コードレビュー | — | — | — | — |
+| 変更内容 | 2026-10-15 | 新規：`api/limiter.py`（`Limiter` は1箇所のみ）・`tests/test_rate_limit.py`（T-P3-01 TC-01-1〜6）。変更：`routes.py`（`Request` 追加・`@router.post` の内側に `@limiter.limit(LOGIN_RATE_LIMIT)`・`login(request, body)`）／`main.py`（`app.state.limiter`・`RateLimitExceeded` ハンドラ・`uvicorn.run` に `proxy_headers=True`・`forwarded_allow_ips="*"`）／`config.py`（`LOGIN_RATE_LIMIT="5/minute"`）／`requirements.txt`（`slowapi`）／`conftest.py`（`load_dotenv` 削除・ダミー値を無条件代入・**`DATABASE_URL` のダミー値追加**・`api_client`／`raw_api_client` に limiter とハンドラ・autouse `reset_rate_limit`）／`useAuth.js`（`err.status`）／`LoginForm.jsx`（429 の文言）。`BackgroundTasks` は書かず、`config.ENABLE_SCHEDULER` は追加せず | ✅ | なし |
+| 動作確認（ローカル） | 2026-10-15 | `pytest` **104 passed**（98＋6）。**hermetic 確認**：偽の `DATABASE_URL`（`postgresql+psycopg://dummy…`）と `SECRET_KEY` を設定しても **104 passed**（`conftest.py` の無条件代入の実証）。`conftest.py` に `setdefault`・`load_dotenv` が0件。ルートの増減なし。`limiter` の出現は `limiter.py`・`routes.py`・`main.py` のみ。`npm run lint` は既存4errors（`useNews.js`）のまま増加なし・`npm run build` 成功。`test_t10` を含む不安定なテストは出ず | ✅ | なし |
+| コードレビュー | 2026-10-15 | 変更後の `routes.py` の import／デコレータ順序、`main.py`、`conftest.py`、`test_rate_limit.py` を突合。①制限回数を `config.LOGIN_RATE_LIMIT` から導出（直書きなし）、②TC-01-6 は `crud.count_users()`／`crud.get_user()`（`hashed_password` を含む）を 429 の前後で比較、③`api_client`／`raw_api_client` の両方に limiter 設定。設計§2-1-1・§2-4-2・§2-6（`LOGIN_RATE_LIMIT` のみ）・§2-7・§4-2-1 と一致。差異3件（`BackgroundTasks` なし・`config.ENABLE_SCHEDULER` なし・`DATABASE_URL` ダミー追加）は指示文どおり | ✅ | なし |
+| 本番確認（push 後・指示文§9） | — | 9-1 偽装なしで 401×5→429／**9-2 X-Forwarded-For 偽装でバイパスできないか（🔴）**／9-3 UI の 429 文言 | ⬜ | Takumi様の確認待ち |
 
 **⚠️ 実装時の注意（設計書で明示された落とし穴）**
 
@@ -766,8 +768,9 @@ def startup_event() -> None:
 | 2 | **`api/routes.py` L1 に `Request` を追加する**。`slowapi` のデコレータは引数名 `request` の `Request` を要求するため、無いと `NameError` | 同上 |
 | 3 | **`conftest.py` に `app.state.limiter` を設定する**。無いとリクエスト時に例外 | テスト設計書§2-0 #1 |
 | 4 | **`reset_rate_limit` フィクスチャを追加する**。カウンタがテスト間に残り、**単独では通り全体では落ちる**（またはその逆） | 同§2-0 #3 |
-| 5 | **`conftest.py` の `load_dotenv(...)` を削除し、ダミー値を無条件代入にする**。現状は `.env` が `setdefault` を無効化しており、**テストが実値で動く** | 同§1-6-2 |
+| 5 | **`conftest.py` の `load_dotenv(...)` を削除し、ダミー値を無条件代入にする**。🔧（テスト設計書 v0.6 で是正）現状は `app/.env` が無く no-op でダミー値で動いているが、**`app/.env` が作られた瞬間に実値で動き出す**。シェルの export も `setdefault` では上書きできない | 同§1-6-2 |
 | 6 | **429 のUIには `useAuth.js` の変更が必要**。現状は `!res.ok` を一括で同じ例外にしており、**ステータスコードがUIに届かない** | 詳細設計書§4-2-1 |
+| 7 🔴 | **`forwarded_allow_ips="*"` は、Render が `X-Forwarded-For` を上書きしない場合、クライアントが付けた先頭の値を uvicorn が採るため、リクエストごとに偽装 IP を変えるとレート制限をバイパスできうる**。設計§2-4-2 は「Render 以外から直接ポートに到達できない」ことのみを前提とし、**偽装の可否は検討していない**。コミュニティでは「Render は追記のみ」との報告と「先頭がクライアント IP」との報告が食い違い、**公式の記述は確認できなかった**（2026-10-15 時点）。**単体テストでは検証できない**（`TestClient` はプロキシを経由しない）ため、**指示文§9-2 に本番での偽装確認を置いた**。バイパス可能と判明した場合は、キー関数の変更（右端から信頼できるホップ数を引く）を別途設計する | 当方の追加調査（設計書に無い論点） |
 
 ---
 

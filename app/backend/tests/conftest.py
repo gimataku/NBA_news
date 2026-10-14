@@ -3,24 +3,19 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from dotenv import load_dotenv
-
-load_dotenv(
-    os.path.join(os.path.dirname(__file__), "..", "..", ".env"),
-    override=True,
-)
-
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 TEST_DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "test.db"))
 
-os.environ.setdefault("ANTHROPIC_API_KEY", "sk-ant-test-dummy-key")
-os.environ.setdefault("BALLDONTLIE_API_KEY", "test-dummy-key")
-os.environ.setdefault("SECRET_KEY", "test-secret-key-for-testing-purposes-only-32chars")
-os.environ.setdefault("USERNAME", "testuser")
-os.environ.setdefault("USER_PASSWORD", "testpass123")
+# シェルや .env の実値に左右されないよう無条件に上書きする
+os.environ["ANTHROPIC_API_KEY"]   = "sk-ant-test-dummy-key"
+os.environ["BALLDONTLIE_API_KEY"] = "test-dummy-key"
+os.environ["SECRET_KEY"]          = "test-secret-key-for-testing-purposes-only-32chars"
+os.environ["USERNAME"]            = "testuser"
+os.environ["USER_PASSWORD"]       = "testpass123"
+os.environ["DATABASE_URL"]        = "sqlite:///test_dummy.db"   # 本番URLが混入しても collection が壊れないようにする（実際のテストは conftest 自前のエンジンを使うため値は使われない）
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -78,13 +73,25 @@ def reset_db(patch_db_session):
     yield
 
 
+@pytest.fixture(autouse=True)
+def reset_rate_limit():
+    from api.limiter import limiter
+    limiter.reset()
+    yield
+
+
 @pytest.fixture
 def api_client(reset_db):
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
+    from slowapi import _rate_limit_exceeded_handler
+    from slowapi.errors import RateLimitExceeded
+    from api.limiter import limiter
     from api.routes import get_current_user, router
 
     app = FastAPI()
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
     app.include_router(router, prefix="/api")
     app.dependency_overrides[get_current_user] = lambda: "testuser"
     with TestClient(app) as client:
@@ -96,9 +103,14 @@ def raw_api_client(reset_db):
     """JWT認証オーバーライドなしのテストクライアント（認証テスト用）"""
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
+    from slowapi import _rate_limit_exceeded_handler
+    from slowapi.errors import RateLimitExceeded
+    from api.limiter import limiter
     from api.routes import router
 
     app = FastAPI()
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
     app.include_router(router, prefix="/api")
     with TestClient(app) as client:
         yield client
