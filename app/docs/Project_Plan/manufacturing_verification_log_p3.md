@@ -1268,7 +1268,7 @@ def startup_event() -> None:
 
 ## 7-A-11：`/api/fetch` と `test_post_fetch()` の削除
 
-**状態：🔄 実装・ローカル検証 ✅（2026-10-14）／commit・push・本番確認（403→404）が残る｜前提 ✅（7-A-10 完了・`workflow_dispatch` 動作確認済み）**
+**状態：✅ 完了（2026-10-14）｜本番確認 ✅（認証なし `POST /api/fetch` が 404・ログイン成功）｜前提 ✅（7-A-10 完了・`workflow_dispatch` 動作確認済み）**
 
 | 項目 | 内容 |
 |---|---|
@@ -1280,7 +1280,7 @@ def startup_event() -> None:
 | 変更内容 | 2026-10-14 | `routes.py`：`trigger_fetch()`（L105-111）・L1 の `BackgroundTasks`・L8 の `from scheduler import run_batch` を削除。`test_routes.py`：`test_post_fetch()`（実際の削除範囲は直前の空行を含む L262-267）を削除し、L252 のセクションコメントを `# ── GET /api/status ──…`（80文字幅）に修正。改行コードは既存を維持（routes.py＝CRLF／test_routes.py＝LF）。**指示文どおり2ファイルのみ**（`git diff --stat`＝routes.py 12行・test_routes.py 9行。ログの差分は当方の更新分） | ✅ | なし |
 | 動作確認 | 2026-10-14 | `pytest` **98 passed**（99−1）。`git grep` で `api/fetch`・`trigger_fetch`・`test_post_fetch` が backend/ に **0件**、`run_batch`・`BackgroundTasks` が routes.py に **0件**、`router.routes` のパスが `['/auth/login', '/news', '/schedule', '/settings', '/settings', '/status']` で **`/fetch` なし** | ✅ | **🟡 1回目のフル実行で `test_crud.py::test_t10_delete_old_articles` が失敗（`assert 2 == 1`）。本変更とは無関係**（下記）。単独5回・再実行のフルスイートはいずれも合格 |
 | コードレビュー | 2026-10-14 | 変更後の `routes.py` L1-9・`get_status`〜`get_settings` を突合。他の import（`APIRouter`・`Depends`・`HTTPException`・`Query`・`status`）は残り、`get_status` と `get_settings` の間は空行2行。設計§3-5 の削除対象3点＋テスト2点に1対1で一致。**フロントに `/api/fetch` を呼ぶ箇所なし** | ✅ | なし |
-| 本番確認（push 後） | — | 認証なしの `POST /api/fetch` が **403 → 404** に変わること（`instruction_7-A-11.md` §6） | ⬜ | Takumi様の確認待ち |
+| 本番確認（push 後） | 2026-10-14 | 認証なしの `POST /api/fetch` が **404**（削除前は 403）・ログイン成功 | ✅ | なし |
 
 ### 🟡 発見：`test_t10_delete_old_articles` は秒境界で不安定（既存の欠陥・7-A-11 起因ではない）
 
