@@ -1,9 +1,9 @@
 # 7-A-10 第1区 作業手順書（準備・本番無傷）
 
 - **対象**: `instruction_7-A-10.md` §3 第1区（ステップ0〜4.5）
-- **作成日**: 2026-10-13
+- **作成日**: 2026-10-13（**v2：2026-10-14 改訂**・実行結果を反映。ステップ1.5 → **2.5** に採番し直し）
 - **主担当**: **Takumi様**
-- **性質**: 🟢**この区間は何度でもやり直せる。** 本番は無傷で、`git revert` ＋ Auto-Deploy On ＋ Neon プロジェクト削除で原状復帰する
+- **性質**: 🟢**この区間は何度でもやり直せる。** 本番は無傷で、`git revert` ＋ Auto-Deploy On ＋ Neon プロジェクト削除で原状復帰する（**第1区は ✅完了・2026-10-14**。後続の区は `instruction_7-A-10.md` v2）
 - **前提**: 前提A ✅／前提B ✅／前提C ✅（`instruction_7-A-10.md` §2）
 
 > **⚠️ シークレットの実値をチャットに出さない。** Neon の接続文字列・APIキー・パスワードはいずれも対象。共有するのは**成否・件数・エラーの種類**のみ。
@@ -124,50 +124,6 @@ Neon の接続文字列には2種類ある。
 
 ---
 
-## ステップ1.5 🆕：ローカルで接続を確認する（**コスト0**）
-
-**ステップ4（初回バッチ）は Claude API を使うため有料である。その前に、接続とドライバだけを無料で確かめる。**
-
-### 操作（手元・PowerShell）
-
-```powershell
-cd C:\Users\gimatakumi\Documents\projects\NBA_news\app\backend
-$env:DATABASE_URL = "postgresql+psycopg://...書き換え済みの文字列..."
-python -c "from db.models import engine; from sqlalchemy import text; print('driver:', engine.url.get_driver_name()); c = engine.connect(); print('select 1 =', c.execute(text('select 1')).scalar()); c.close()"
-```
-
-### 期待される出力
-
-```
-driver: psycopg
-select 1 = 1
-```
-
-### 失敗したときの読み方
-
-| 出力 | 原因 | 対処 |
-|---|---|---|
-| `ModuleNotFoundError: No module named 'psycopg2'` | **スキームが `postgresql://` のまま** | 1-3 の書き換えをやり直す |
-| `ModuleNotFoundError: No module named 'psycopg'` | **`psycopg[binary]` が未インストール** | `pip install -r requirements.txt` を実行（7-A-9a で追記済み） |
-| `could not translate host name` | ホスト名の誤り | 文字列をコピーし直す |
-| `password authentication failed` | 認証情報の誤り | 同上 |
-| `SSL connection has been closed` 等 | `?sslmode=require` が落ちている | 末尾を確認 |
-| `ArgumentError: Could not parse SQLAlchemy URL` | 文字列の破損（改行混入など） | 1行であることを確認 |
-
-> ⚠️ **このステップは `models.py` の変更がまだ無くても動く**——`$env:DATABASE_URL` に URL 形式を入れると、**旧コードは `sqlite:///postgresql+psycopg://...` を組み立ててしまう**。
->
-> **したがって本ステップはステップ2（`models.py` の切り替え）の *後* に実行する。** 順序は **0 → 1 → 2 → 1.5 → 3 → 4** とする（番号は原典との対応を保つためそのまま）。
-
-### 終わったら環境変数を消す
-
-```powershell
-Remove-Item Env:\DATABASE_URL
-```
-
-🔴 **消し忘れると、同じ PowerShell セッションでの `pytest` や `python main.py` が Neon を見てしまう。**
-
----
-
 ## ステップ2：`models.py` の切り替えと push
 
 ### 2-1. `models.py` L81-86 のコメントを入れ替える
@@ -211,7 +167,7 @@ python -c "from db.models import engine; print(engine.url)"
 pytest
 ```
 
-**期待**: **90 passed**（`conftest.py` が自前のエンジンを使うため無改修で通る）
+**期待**: **90 passed**（`conftest.py` が自前のエンジンを使うため通る。🔴**ただし `DATABASE_URL` を外した状態で**。接続URL形式が残っていて psycopg が未導入だと collection でエラーになる）
 
 ### 2-3. コミットと push
 
@@ -235,7 +191,55 @@ git push
 | **新しいエントリが無い** | ✅**Auto-Deploy Off が効いている**（前提D③ の実測） | 次へ進む |
 | 🔴**新しいデプロイが走り始めた** | **Auto-Deploy が止まっていない** | 🔴**即座に Cancel**。放置すると `create_engine("/data/nba_news.db")` で**起動失敗**し、F4 の再現になる |
 
+> 🔴**この確認は「ステップ2 の時点では Off が効いていた」ことしか保証しない。** 後続の `render.yaml` の push（第2区 5A）の sync で **Auto-Deploy が On に戻りうる**（F7・2026-10-14）。**以降の push の直前にも、同じ確認が要る。**
+>
 > **Cancel が間に合わなかった場合**: デプロイは失敗するが、**Render は直前の正常なデプロイを live のまま維持する**ため、本番は動き続ける。慌てずに Auto-Deploy の設定を直し、**Deploys タブで live のコミットが変わっていないこと**を確認する。
+
+---
+
+## ステップ2.5：ローカルで接続を確認する（**コスト0**・ステップ2の*後*）
+
+**ステップ4（初回バッチ）は Claude API を使うため有料である。その前に、接続とドライバだけを無料で確かめる。**
+
+### 操作（手元・PowerShell）
+
+```powershell
+cd C:\Users\gimatakumi\Documents\projects\NBA_news\app\backend
+pip install -r requirements.txt
+$env:DATABASE_URL = "postgresql+psycopg://...書き換え済みの文字列..."
+python -c "from db.models import engine; from sqlalchemy import text; print('driver:', engine.url.get_driver_name()); c = engine.connect(); print('select 1 =', c.execute(text('select 1')).scalar()); c.close()"
+```
+
+### 期待される出力
+
+```
+driver: psycopg
+select 1 = 1
+```
+
+### 失敗したときの読み方
+
+| 出力 | 原因 | 対処 |
+|---|---|---|
+| `ModuleNotFoundError: No module named 'psycopg2'` | **スキームが `postgresql://` のまま** | 1-3 の書き換えをやり直す |
+| `ModuleNotFoundError: No module named 'psycopg'` | **`psycopg[binary]` が未インストール** | `pip install -r requirements.txt` を実行（7-A-9a で追記済み） |
+| `could not translate host name` | ホスト名の誤り | 文字列をコピーし直す |
+| `password authentication failed` | 認証情報の誤り | 同上 |
+| `SSL connection has been closed` 等 | `?sslmode=require` が落ちている | 末尾を確認 |
+| `ArgumentError: Could not parse SQLAlchemy URL` | 文字列の破損（改行混入など） | 1行であることを確認 |
+
+> 🔴 **順序は 0 → 1 → 2 → 2.5 → 3 → 4 → 4.5。** ステップ2（`models.py` の新コード有効化）の**前**に実行すると、**旧コードが `sqlite:///postgresql+psycopg://...` を組み立てて `driver: pysqlite` になる**（実測・2026-10-14）。
+>
+> 🔴 **`pip install -r requirements.txt` が先に必要**。`psycopg[binary]`（7-A-9a で追記済み）が未導入だと `ModuleNotFoundError: No module named 'psycopg'` になり、**同じセッションで `pytest` を走らせると collection の段階で 7 件がエラー**になる（`db/models.py` のモジュールレベル `create_engine()` が import 時に走るため。実測）。
+
+### 終わったら環境変数を消す
+
+```powershell
+Remove-Item Env:\DATABASE_URL
+python -c "import os; print('DATABASE_URL' in os.environ)"
+```
+
+**期待：`False`**。🔴 **消し忘れると、同じ PowerShell セッションでの `pytest` や `python main.py` が Neon を見てしまう**（実測：別ウィンドウで消して残っていた）。
 
 ---
 
@@ -346,7 +350,7 @@ cd C:\Users\gimatakumi\Documents\projects\NBA_news\app\backend
 python -c "import os; print('DATABASE_URL' in os.environ)"
 ```
 
-**期待：`False`**（🔴 ステップ1.5 の後片付けができているか。`True` なら `Remove-Item Env:\DATABASE_URL`）
+**期待：`False`**（🔴 ステップ2.5 の後片付けができているか。`True` なら `Remove-Item Env:\DATABASE_URL`）
 
 ```powershell
 pytest
@@ -354,7 +358,7 @@ pytest
 
 **期待：90 passed**
 
-> **テストDBは SQLite 維持**（テスト設計書§6-4）。`conftest.py` はテスト専用エンジンを自前で生成するため、**Neon 移行後も無改修で通る**。**これが通ることがその設計の実証である。**
+> **テストDBは SQLite 維持**（テスト設計書§6-4）。`conftest.py` はテスト専用エンジンを自前で生成するため、**`DATABASE_URL` が未設定か SQLite URL のときは**移行後も通る。**接続URL形式の環境変数が残っていると、モジュール import 時の `create_engine()` が先に走って失敗する**（テスト設計書 v0.7 で `conftest.py` にダミー値を足して塞ぐ）。
 
 ---
 
@@ -362,13 +366,13 @@ pytest
 
 | # | 項目 | 判定 |
 |---|---|---|
-| 0 | Auto-Deploy が `No` | ⬜ |
-| 1 | Neon プロジェクト作成・**Direct** 接続文字列・**`postgresql+psycopg://`** に書き換え | ⬜ |
-| 2 | `models.py` 切り替え・push・**Deploys にデプロイが走っていない** | ⬜ |
-| 1.5 | ローカルから Neon へ `select 1` が通る・**環境変数を消した** | ⬜ |
-| 3 | Secrets **3件のみ**（認証系3件が無い） | ⬜ |
-| 4 | ジョブ成功・**`INFO` ログあり**・**`articles` > 0**・**`users` = 0** | ⬜ |
-| 4.5 | `pytest` 90 passed | ⬜ |
+| 0 | Auto-Deploy が `No` | ✅ |
+| 1 | Neon プロジェクト作成・**Direct** 接続文字列・**`postgresql+psycopg://`** に書き換え | ✅ |
+| 2 | `models.py` 切り替え・push・**Deploys にデプロイが走っていない** | ✅ |
+| 2.5 | `pip install`・ローカルから Neon へ `select 1` が通る（`driver: psycopg`）・**環境変数を消した** | ✅ |
+| 3 | Secrets **3件のみ**（認証系3件が無い） | ✅ |
+| 4 | ジョブ成功・**`INFO` ログあり**・**`articles` > 0**・**`users` = 0** | ✅ |
+| 4.5 | `pytest` 90 passed | ✅ |
 
 > 🟢**ここまでは本番無傷である。** 全項目に ✅ が付いたら、`instruction_7-A-10.md` の**第2区（5A・5B・5C）**へ進む。第2区も後戻りできる。
 >
