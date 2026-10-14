@@ -249,7 +249,7 @@ def test_tc_p2_07_3_schedule_no_jwt(raw_api_client):
     assert resp.status_code == 401
 
 
-# ── GET /api/status・POST /api/fetch ──────────────────────────────────────────
+# ── GET /api/status ───────────────────────────────────────────────────────────
 
 def test_get_status(api_client):
     """GET /api/status → HTTP 200 / 必須フィールドを返す"""
@@ -258,10 +258,3 @@ def test_get_status(api_client):
     body = resp.json()
     assert "last_fetched_at" in body
     assert "api_limit_exceeded" in body
-
-
-def test_post_fetch(api_client, mocker):
-    """POST /api/fetch → HTTP 200 / バックグラウンドタスクが登録される"""
-    mocker.patch("api.routes.run_batch")
-    resp = api_client.post("/api/fetch")
-    assert resp.status_code == 200

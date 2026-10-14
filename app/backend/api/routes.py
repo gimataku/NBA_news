@@ -1,11 +1,10 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
 from auth.jwt import create_access_token, verify_token
 from auth.users import authenticate_user
 from db import crud
-from scheduler import run_batch
 
 router = APIRouter()
 
@@ -100,15 +99,6 @@ async def get_status(current_user: str = Depends(get_current_user)):
         "api_limit_exceeded": crud.get_setting("api_limit_exceeded") == "true",
         "metrics":            crud.get_metrics(),
     }
-
-
-@router.post("/fetch")
-async def trigger_fetch(
-    background_tasks: BackgroundTasks,
-    current_user: str = Depends(get_current_user),
-):
-    background_tasks.add_task(run_batch)
-    return {"message": "バッチ処理を開始しました"}
 
 
 @router.get("/settings")
