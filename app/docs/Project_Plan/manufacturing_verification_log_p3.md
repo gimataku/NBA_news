@@ -744,7 +744,7 @@ def startup_event() -> None:
 
 ## 7-A-4：F-17 レートリミット ＋ `conftest.py` の改修
 
-**状態：🔄 実装・ローカル検証 ✅（2026-10-15）／commit・push・本番確認（特に 9-2 の偽装バイパス）が残る｜前提 ✅**
+**状態：🔄 実装・ローカル検証・本番 9-1／9-3 ✅（2026-10-15）／🔴 9-2 でバイパス成立（F8）→ 7-A-4b（診断）・7-A-4c（修正）が残る**
 
 | 項目 | 内容 |
 |---|---|
@@ -758,7 +758,17 @@ def startup_event() -> None:
 | 変更内容 | 2026-10-15 | 新規：`api/limiter.py`（`Limiter` は1箇所のみ）・`tests/test_rate_limit.py`（T-P3-01 TC-01-1〜6）。変更：`routes.py`（`Request` 追加・`@router.post` の内側に `@limiter.limit(LOGIN_RATE_LIMIT)`・`login(request, body)`）／`main.py`（`app.state.limiter`・`RateLimitExceeded` ハンドラ・`uvicorn.run` に `proxy_headers=True`・`forwarded_allow_ips="*"`）／`config.py`（`LOGIN_RATE_LIMIT="5/minute"`）／`requirements.txt`（`slowapi`）／`conftest.py`（`load_dotenv` 削除・ダミー値を無条件代入・**`DATABASE_URL` のダミー値追加**・`api_client`／`raw_api_client` に limiter とハンドラ・autouse `reset_rate_limit`）／`useAuth.js`（`err.status`）／`LoginForm.jsx`（429 の文言）。`BackgroundTasks` は書かず、`config.ENABLE_SCHEDULER` は追加せず | ✅ | なし |
 | 動作確認（ローカル） | 2026-10-15 | `pytest` **104 passed**（98＋6）。**hermetic 確認**：偽の `DATABASE_URL`（`postgresql+psycopg://dummy…`）と `SECRET_KEY` を設定しても **104 passed**（`conftest.py` の無条件代入の実証）。`conftest.py` に `setdefault`・`load_dotenv` が0件。ルートの増減なし。`limiter` の出現は `limiter.py`・`routes.py`・`main.py` のみ。`npm run lint` は既存4errors（`useNews.js`）のまま増加なし・`npm run build` 成功。`test_t10` を含む不安定なテストは出ず | ✅ | なし |
 | コードレビュー | 2026-10-15 | 変更後の `routes.py` の import／デコレータ順序、`main.py`、`conftest.py`、`test_rate_limit.py` を突合。①制限回数を `config.LOGIN_RATE_LIMIT` から導出（直書きなし）、②TC-01-6 は `crud.count_users()`／`crud.get_user()`（`hashed_password` を含む）を 429 の前後で比較、③`api_client`／`raw_api_client` の両方に limiter 設定。設計§2-1-1・§2-4-2・§2-6（`LOGIN_RATE_LIMIT` のみ）・§2-7・§4-2-1 と一致。差異3件（`BackgroundTasks` なし・`config.ENABLE_SCHEDULER` なし・`DATABASE_URL` ダミー追加）は指示文どおり | ✅ | なし |
-| 本番確認（push 後・指示文§9） | — | 9-1 偽装なしで 401×5→429／**9-2 X-Forwarded-For 偽装でバイパスできないか（🔴）**／9-3 UI の 429 文言 | ⬜ | Takumi様の確認待ち |
+| 本番確認（push 後・指示文§9） | 2026-10-15 | **9-1 ✅**（偽装なし：401×5→429×2）／**9-3 ✅**（ブラウザで6回目に「ログインの試行が多すぎます。1分ほど待ってから再試行してください。」）／🔴**9-2 ❌ バイパス成立**（毎回違う `X-Forwarded-For` を付けた7回が**すべて 401**＝429 が出ない） | ⚠️ | **🔴 F8：レート制限が `X-Forwarded-For` の偽装で無効化できる**（下記） |
+
+### 🔴 F8：`forwarded_allow_ips="*"` により、`X-Forwarded-For` の偽装でレート制限をバイパスできる（2026-10-15・本番実測）
+
+| 項目 | 内容 |
+|---|---|
+| 事象 | 偽装なしでは 5回目まで 401・6回目から 429（IP 単位で効いている）。**毎回違う IP を `X-Forwarded-For` に付けると 7回とも 401**＝バケットが偽装値ごとに分かれ、**制限が働かない** |
+| 原因（推定） | uvicorn は `forwarded_allow_ips="*"` のとき **`X-Forwarded-For` の先頭**を採る。**Render が受信した値を上書きせず追記する**場合、先頭はクライアントが付けた値になる。詳細設計書§2-4-2 は「Render 以外から直接ポートに到達できない」ことのみを前提とし、**クライアントによる偽装は想定していなかった**（当方の指示文§0・7-A-4 の注意#7 で懸念を挙げ、実測で確認した） |
+| 影響 | **ブルートフォース対策（F-17 の目的）が実質無効**。ただし**本サイトは個人利用・URL 非公開**・パスワードの強度・JWT 必須の他エンドポイントは従前どおり。**緊急度は中**（開幕の 10-20 までに塞ぐ） |
+| 対処 | **7-A-4b**（診断用の一時エンドポイントで Render が実際に付けるヘッダを計測）→ **7-A-4c**（キー関数の修正・一時エンドポイントの削除・§9-2 の再実施）。方針の分岐は `instruction_7-A-4b.md` §6 |
+| 教訓 | **「プロキシの背後では、クライアント由来の値と信頼できる値を区別する」を、設計の前提として明示すべきだった**。`X-Forwarded-For` は**右から信頼できる段数だけ**数えるのが原則（先頭は偽装できる）。設計書の確認対象（実装を読む）では見えず、**本番での偽装試験でのみ検出できた**（テスト設計書は「手順9の実機確認」に委ねていたが、**確認内容が「別回線の影響の有無」だけで、偽装は含まれていなかった**） |
 
 **⚠️ 実装時の注意（設計書で明示された落とし穴）**
 
