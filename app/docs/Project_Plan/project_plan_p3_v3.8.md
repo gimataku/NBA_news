@@ -689,7 +689,7 @@ Section C の実施だけでは**フェーズ2は文書上クローズされな�
 | **7-A-1** | **先-1：`config.py` の必須チェックの用途別分離** | Claude Code | `config.py`・`auth/jwt.py`・`auth/users.py` | **2026年9月中** | ✅（**2026-09-19 完了**・期限内。製造検証ログに記録。**テスト設計書の前提誤り2件を検出し v0.6 で是正**） |
 | **7-A-2** | **先-2：Render Health Check通知の有効化** | **Takumi様**（ダッシュボード） | なし（設定のみ） | **2026年9月中** | ❌ **未達で確定**（2026-10-08・Takumi様判断。Health Check Path は有効だが**通知が届かない**＝F2。**再挑戦／廃止の決定は 7-A-10 ステップ12**） |
 | **7-A-3** | **ステータスAPI拡張**（運用指標） | Claude Code | `db/crud.py`・`api/routes.py`・`hooks/useNews.js` | **移行より先** | ✅（**2026-10-13 完了**。基準値 `total_articles`=358／`articles_last_7d`=91。`config.py` の `METRICS_WINDOW_DAYS` も範囲に含めた） |
-| **7-A-4** | **F-17 レートリミット**（`slowapi` 導入・`forwarded_allow_ips`・429のUI）＋**`conftest.py` の改修**（`app.state.limiter`・`reset_rate_limit`・`.env` 読み込みの削除） | Claude Code | `api/limiter.py`（新規）・`api/routes.py`・`main.py`・`config.py`・`requirements.txt`・`hooks/useAuth.js`・`components/LoginForm.jsx`・**`tests/conftest.py`** | — | 🔄（**実装・ローカル検証 ✅・本番 9-1／9-3 ✅（2026-10-15）**。🔴**本番の偽装試験でレート制限のバイパスが成立（F8）**→ 7-A-4b（Render のヘッダ計測）→ 7-A-4c（キー関数の修正）。T-P3-01 は前倒し実装済み・T-P3-14 は 7-A-8 の後） |
+| **7-A-4** | **F-17 レートリミット**（`slowapi` 導入・`forwarded_allow_ips`・429のUI）＋**`conftest.py` の改修**（`app.state.limiter`・`reset_rate_limit`・`.env` 読み込みの削除） | Claude Code | `api/limiter.py`（新規）・`api/routes.py`・`main.py`・`config.py`・`requirements.txt`・`hooks/useAuth.js`・`components/LoginForm.jsx`・**`tests/conftest.py`** | — | ✅（**2026-10-17 完了**。🔴**本番の偽装試験でレート制限のバイパスが成立（F8・2026-10-15）→ 7-A-4b（Render のヘッダ計測）→ 7-A-4c（キー関数を `CF-Connecting-IP`→`X-Forwarded-For` の右から2番目→`client.host` に変更）で解消**。T-P3-01 は前倒し実装済み（TC-01-7・8・K-1〜6 を追加）・T-P3-14 は 7-A-8 の後） |
 | **7-A-5** | **F-18・F-19・F-21**（日付検証／`utcnow()` 置換／CORS限定）＋**`cors_client` フィクスチャの追加** | Claude Code | `api/routes.py`・`auth/jwt.py`・`tests/test_routes.py`・`main.py`・`config.py`・**`tests/conftest.py`** | — | ⬜ |
 | **7-A-6** | **F-14 ラベル変更** | Claude Code | `components/FilterBar.jsx` | — | ⬜ |
 | **7-A-7** | **F-16 表記統一**（`GLOSSARY`） | Claude Code＋**Takumi様**（選手名の確定） | `processor/claude_client.py` | — | ⬜ |
@@ -746,6 +746,8 @@ Section C の実施だけでは**フェーズ2は文書上クローズされな�
 | 5 | 週次チェックリスト（7-B）：`/api/status` が 200 かつ `metrics` 5キー／Neon の CU-hours・ネットワーク転送（5 GB／月）の目視／無料プランのスピンダウン復帰（約1分） | 7-B |
 | 6 | コスト：実測 週91〜92件（前提の約1.8倍）。**開幕後1か月の再検証は「必須」** | 開幕後（手順10） |
 | 7 | `useNews.js` の未使用 `TAB_LIST`・`API_CATEGORIES`／`setApiStatus` の `metrics` 初期値の扱い | 7-A-8／7-B |
+| 8 | 🔴**F8 の反映（設計書の改訂）**：詳細設計書§2-1-1（`get_remote_address` → `get_client_ip`）・§2-4-2（`forwarded_allow_ips="*"` を削除・理由）・§2-6／§2-4-3（`ENABLE_SCHEDULER` は `main._scheduler_enabled()`）・§3-5（`/api/fetch` の行番号 L105-111）。**基本設計書§4-1** にも `forwarded_allow_ips` の前提が書かれている | **詳細設計書 v0.5・基本設計書の次版** |
+| 9 | **テスト設計書 v0.7**：①§6-4「テスト側は無改修で済む」を条件付きに／§1-6-2 対処2 に `DATABASE_URL` を追加（7-A-4 で `conftest.py` は実施済み）、②T-P3-01 に **TC-01-7（偽装を変えても同じバケット）・TC-01-8（IP単位）・K-1〜K-6（キー関数）**を追加、③**手順9 シナリオ13（IP単位の制限）に「`X-Forwarded-For`・`True-Client-IP` の偽装」を含める**（別回線の確認だけでは F8 を検出できなかった）、④T-10 の境界定義（`test_t10_delete_old_articles` の秒境界の不安定さ） | **テスト設計書 v0.7** |
 
 **7-B で設計するサブ手順（予告）**
 
