@@ -10,6 +10,7 @@ from slowapi.errors import RateLimitExceeded
 from api.limiter import limiter
 from api.routes import router as api_router
 from auth.users import init_user
+from config import CORS_ALLOW_HEADERS, CORS_ALLOW_METHODS
 from db import crud
 from db.models import init_db
 from scheduler import check_and_run_batch, scheduler
@@ -39,8 +40,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=CORS_ALLOW_METHODS,
+    allow_headers=CORS_ALLOW_HEADERS,
 )
 
 app.include_router(api_router, prefix="/api")

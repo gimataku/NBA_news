@@ -34,6 +34,10 @@ METRICS_WINDOW_DAYS = 7   # 週次チェックリストの周期と一致させ�
 # レートリミット設定（F-17）
 LOGIN_RATE_LIMIT = "5/minute"
 
+# CORS設定（F-21）：main.py とテストフィクスチャの双方がここを読む（乖離させない）
+CORS_ALLOW_METHODS = ["GET", "POST", "PUT"]
+CORS_ALLOW_HEADERS = ["Authorization", "Content-Type"]
+
 # Spurs設定
 SPURS_TEAM_ID = 27
 SPURS_KEYWORDS = [

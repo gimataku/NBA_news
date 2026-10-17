@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
@@ -83,12 +85,12 @@ async def get_news(
 
 @router.get("/schedule")
 async def get_schedule(
-    start_date: str,
-    end_date: str,
+    start_date: date,
+    end_date: date,
     current_user: str = Depends(get_current_user),
 ):
     """C-05タブ用。game_scheduleテーブルから試合日程を返す。"""
-    games = crud.get_game_schedule(start_date, end_date)
+    games = crud.get_game_schedule(start_date.isoformat(), end_date.isoformat())
     return {"games": games}
 
 

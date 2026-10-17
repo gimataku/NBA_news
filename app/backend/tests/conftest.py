@@ -114,3 +114,31 @@ def raw_api_client(reset_db):
     app.include_router(router, prefix="/api")
     with TestClient(app) as client:
         yield client
+
+
+@pytest.fixture
+def cors_client(reset_db):
+    """本番と同じ CORS 定数（config）を適用したテストクライアント（F-21・T-P3-05 用）"""
+    from fastapi import FastAPI
+    from fastapi.middleware.cors import CORSMiddleware
+    from fastapi.testclient import TestClient
+    from slowapi import _rate_limit_exceeded_handler
+    from slowapi.errors import RateLimitExceeded
+    from api.limiter import limiter
+    from api.routes import get_current_user, router
+    from config import CORS_ALLOW_HEADERS, CORS_ALLOW_METHODS
+
+    app = FastAPI()
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:5173"],
+        allow_credentials=True,
+        allow_methods=CORS_ALLOW_METHODS,
+        allow_headers=CORS_ALLOW_HEADERS,
+    )
+    app.include_router(router, prefix="/api")
+    app.dependency_overrides[get_current_user] = lambda: "testuser"
+    with TestClient(app) as client:
+        yield client

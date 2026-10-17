@@ -790,13 +790,14 @@ def startup_event() -> None:
 
 ## 7-A-5：F-18・F-19・F-21 ＋ `cors_client` フィクスチャ
 
-**状態：⬜ 未実施**
+**状態：🔄 指示文作成済み（2026-10-17・`instruction_7-A-5.md`）／実装・確認はこれから｜前提 ✅（7-A-4 完了）**
 
 | 項目 | 内容 |
 |---|---|
 | 設計 | 詳細設計書§2-1-2（F-18）・§2-3（F-19）・§2-4-1＋§2-6（F-21） |
 | 変更対象 | `api/routes.py`・`auth/jwt.py`・`tests/test_routes.py`・`main.py`・`config.py`・`tests/conftest.py` |
-| テスト | T-P3-02・T-P3-04・T-P3-05（**TC-05-11 を含む**） |
+| テスト | T-P3-02・T-P3-04・T-P3-05（**TC-05-11 を含む**）＝**本サブ手順で前倒し実装**（7-A-4 と同じ理由）。TC-04-5（`utcnow` の残存なし）は pytest ではなく `grep` で確認 |
+| **指示文での確認・追加判断（2026-10-17）** | ①`auth/jwt.py` の `utcnow()` は設計書の L11 ではなく**実測 L16**（7-A-1 で位置が動いた）。②CORS のプリフライトで許可されないメソッド・ヘッダ・オリジンは Starlette が **HTTP 400** を返すため、テスト設計書の「拒否」を **400＋`Allow-Methods` に含まれない**として検証する（実挙動と異なれば仕様に合わせて直す）。③`cors_client` にも `app.state.limiter` とハンドラを設定（`/auth/login` のデコレータのため）。④フロント（`GameSchedule.jsx`）は `YYYY-MM-DD` を送っており F-18 で表示は変わらない。使用ヘッダは `Authorization`・`Content-Type` のみ（CORS 限定で落ちない）。⑤`monitor.py` L149 の naive な `datetime.now()` は `utcnow()` ではなく範囲外 |
 
 | 項目 | 実施日 | 内容 | 結果 | 問題点 |
 |---|---|---|---|---|

@@ -116,7 +116,7 @@ def test_tc_p2_02_3_expired_token(raw_api_client):
 
     expired_payload = {
         "sub": "testuser",
-        "exp": datetime.utcnow() - timedelta(hours=1),
+        "exp": datetime.now(timezone.utc) - timedelta(hours=1),
     }
     expired_token = jose_jwt.encode(expired_payload, SECRET_KEY, algorithm=JWT_ALGORITHM)
 
