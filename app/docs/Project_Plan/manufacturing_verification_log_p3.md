@@ -790,7 +790,7 @@ def startup_event() -> None:
 
 ## 7-A-5：F-18・F-19・F-21 ＋ `cors_client` フィクスチャ
 
-**状態：🔄 指示文作成済み（2026-10-17・`instruction_7-A-5.md`）／実装・確認はこれから｜前提 ✅（7-A-4 完了）**
+**状態：🔄 実装・ローカル検証 ✅（2026-10-17）／commit・push・本番確認（特に PUT のトグル保存）が残る｜前提 ✅**
 
 | 項目 | 内容 |
 |---|---|
@@ -801,9 +801,10 @@ def startup_event() -> None:
 
 | 項目 | 実施日 | 内容 | 結果 | 問題点 |
 |---|---|---|---|---|
-| 変更内容 | — | — | — | — |
-| 動作確認 | — | — | — | — |
-| コードレビュー | — | — | — | — |
+| 変更内容 | 2026-10-17 | `routes.py`：`get_schedule` の `start_date`／`end_date` を `date` 型に・`crud` へは `.isoformat()`・先頭に `from datetime import date`。`jwt.py`：`utcnow()` → `datetime.now(timezone.utc)`（**実測 L16**）・import に `timezone`。`test_routes.py`：L119 の1行のみ置換。`config.py`：`CORS_ALLOW_METHODS=["GET","POST","PUT"]`・`CORS_ALLOW_HEADERS=["Authorization","Content-Type"]`。`main.py`：定数を import して `add_middleware` に使用（`allow_origins`・`allow_credentials` は不変）。`conftest.py`：`cors_client` 追加。新規：`test_schedule_date.py`（TC-02-1〜6）・`test_jwt_token.py`（TC-04-1〜4）・`test_cors.py`（TC-05-1〜11） | ✅ | なし |
+| 動作確認（ローカル） | 2026-10-17 | `pytest` **133 passed**（112＋6＋4＋11）。**警告は10件→4件**（`utcnow()` の `DeprecationWarning` が消えた。残る4件は `main.py` の `@app.on_event` の非推奨で範囲外）。TC-04-5：`grep utcnow` **0件**。`main.py` に `allow_*=["*"]` なし。`CORS_ALLOW` の値の直書きは `config.py` のみ。ルートの増減なし。差分は9ファイル（新規3）・`test_routes.py` は1行 | ✅ | なし |
+| コードレビュー | 2026-10-17 | 変更後のコードを設計§2-1-2・§2-3・§2-4-1・§2-6 と突合。**実挙動の確認**：Starlette 1.1.0（FastAPI 0.136.3）で、許可されないプリフライトは指示どおり **400**（期待値は緩めていない）。TC-05-9 は `Access-Control-Allow-Origin` が返らないことも確認。`Middleware.kwargs` は Starlette 1.1.0 で実在（テスト設計書§9 #15 の再確認）。TC-02-1 は期間の外側（前日・翌日）の行も投入。TC-04-4 は署名の先頭1文字を書き換えて作成 | ✅ | なし（**テスト設計書の記載の Starlette 1.3.1 と実環境 1.1.0 の差**は、`kwargs` の実在確認で影響なし） |
+| 本番確認（push 後・指示文§7） | — | ログイン・一覧・**トグル保存（`PUT /api/settings`）**・試合日程タブ・コンソールに CORS エラーなし | ⬜ | Takumi様の確認待ち |
 
 **⚠️ 実装時の注意**
 
