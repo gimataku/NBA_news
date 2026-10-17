@@ -21,7 +21,7 @@ export function FilterBar({ spursOnly, spoilerGuard, onToggleSpurs, onToggleSpoi
             (spursOnly ? 'bg-blue-500 text-white cursor-default' : 'bg-white text-gray-600 hover:bg-gray-50')
           }
         >
-          チームのみ
+          Spursのみ
         </button>
       </div>
 
