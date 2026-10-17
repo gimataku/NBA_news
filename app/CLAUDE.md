@@ -13,10 +13,13 @@ NBAニュース翻訳アプリ（個人利用・著作権法第30条の私的利
 
 ## ディレクトリ構成
 ```
-NBA_news/
-├── render.yaml                # Render Blueprint（正）※app/ の外
+NBA_news/                      # リポジトリルート（Claude Code の作業ディレクトリは app/）
+├── render.yaml                # Render Blueprint（正）
 ├── .github/workflows/
-│   └── batch.yml              # バッチ（GitHub Actions cron）※app/ の外
+│   └── batch.yml              # バッチ（GitHub Actions cron）
+├── .env.example
+├── setup.md                   # 環境構築手順
+├── README.md
 └── app/
     ├── backend/
     │   ├── main.py            # FastAPI エントリーポイント
@@ -60,21 +63,19 @@ NBA_news/
     │   ├── Risk_Report/       # リスク調査書
     │   ├── Test_Design/       # テスト設計書
     │   └── Trial/             # トライアル運用関連
-    ├── .env.example
-    ├── setup.md               # 環境構築手順
-    ├── README.md
-    └── CLAUDE.md
+    └── CLAUDE.md              # 本ファイル（Claude Code が読むため app/ に置く）
 ```
 
 ## 設計書（必ず参照すること）
-- 要件定義書：docs/Requirement/requirements_p3_v0.6.md
-- 基本設計書：docs/Basic_Design/basic_design_p3_v0.8.md
-- 詳細設計書：docs/Detail_Design/detail_design_p3_v0.4.md
-- テスト設計書：docs/Test_Design/test_design_p3_v0.6.md
-- リスク調査書：docs/Risk_Report/risk_report_p3_v0.6.md
-- リスク評価書：docs/Risk_Evaluation/risk_evaluation_p3_v0.4.md
-- 計画書：docs/Project_Plan/project_plan_p3_v3.8.md
-- 実施記録・発見事項：docs/Project_Plan/manufacturing_verification_log_p3.md
+（パスはリポジトリルート `NBA_news/` 起点。`app/` から見ると `docs/…`）
+- 要件定義書：app/docs/Requirement/requirements_p3_v0.6.md
+- 基本設計書：app/docs/Basic_Design/basic_design_p3_v0.8.md
+- 詳細設計書：app/docs/Detail_Design/detail_design_p3_v0.4.md
+- テスト設計書：app/docs/Test_Design/test_design_p3_v0.6.md
+- リスク調査書：app/docs/Risk_Report/risk_report_p3_v0.6.md
+- リスク評価書：app/docs/Risk_Evaluation/risk_evaluation_p3_v0.4.md
+- 計画書：app/docs/Project_Plan/project_plan_p3_v3.8.md
+- 実施記録・発見事項：app/docs/Project_Plan/manufacturing_verification_log_p3.md
 - フェーズ2版（`*_p2_*`）は過去の記録であり、実装の根拠にしない
 
 ## 実装上の重要な注意事項

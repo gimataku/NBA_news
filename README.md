@@ -24,7 +24,7 @@
 | バックエンド | Python 3.11 / FastAPI / SQLAlchemy / PostgreSQL（Neon）※ローカル既定は SQLite / slowapi / APScheduler（ローカル開発用） |
 | フロントエンド | React 18 / Vite / Tailwind CSS |
 | 外部API | Claude API / BALLDONTLIE API / RSS |
-| バッチ | GitHub Actions（cron）→ `backend/run_batch_once.py` |
+| バッチ | GitHub Actions（cron）→ `app/backend/run_batch_once.py` |
 | ホスティング | Render（無料プラン：Web Service＋Static Site）/ Neon（無料枠） |
 | 監視 | healthchecks.io（外部 cron 監視） |
 
@@ -34,9 +34,12 @@
 
 ```
 NBA_news/
-├── render.yaml                # Render Blueprint（正）※app/ の外
+├── render.yaml                # Render Blueprint（正）
 ├── .github/workflows/
-│   └── batch.yml              # バッチ（GitHub Actions cron）※app/ の外
+│   └── batch.yml              # バッチ（GitHub Actions cron）
+├── .env.example
+├── setup.md                   # 環境構築手順
+├── README.md
 └── app/
     ├── backend/
     │   ├── main.py            # FastAPI エントリーポイント
@@ -80,10 +83,7 @@ NBA_news/
     │   ├── Risk_Report/       # リスク調査書
     │   ├── Test_Design/       # テスト設計書
     │   └── Trial/             # トライアル運用関連
-    ├── .env.example
-    ├── setup.md               # 環境構築手順
-    ├── README.md
-    └── CLAUDE.md
+    └── CLAUDE.md              # Claude Code 用の指示書
 ```
 
 ---
@@ -100,21 +100,21 @@ NBA_news/
 ### 2. .env の準備
 
 ```bash
-cp .env.example .env
-# .env を開き以下の変数を記入
+cp .env.example app/backend/.env
+# app/backend/.env を開き以下の変数を記入
 # ANTHROPIC_API_KEY / BALLDONTLIE_API_KEY / SECRET_KEY（任意の長い文字列）/ USERNAME / USER_PASSWORD
 ```
 
 ### 3. バックエンド依存パッケージのインストール
 
 ```bash
-pip install -r backend/requirements.txt
+pip install -r app/backend/requirements.txt
 ```
 
 ### 4. フロントエンド依存パッケージのインストール
 
 ```bash
-cd frontend && npm install
+cd app/frontend && npm install
 ```
 
 ---
@@ -125,10 +125,10 @@ cd frontend && npm install
 
 ```bash
 # バックエンド（ポート 8000）
-cd backend && python main.py
+cd app/backend && python main.py
 
 # フロントエンド（ポート 5173）
-cd frontend && npm run dev
+cd app/frontend && npm run dev
 ```
 
 ブラウザで `http://localhost:5173` を開くと画面が表示されます。
@@ -153,7 +153,7 @@ cd frontend && npm run dev
 
 ## 環境変数
 
-`.env.example` を参考に `.env` を作成してください。
+`.env.example` を参考に `app/backend/.env` を作成してください。
 
 | 変数名 | 説明 | 取得先 |
 |---|---|---|

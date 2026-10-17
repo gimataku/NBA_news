@@ -27,6 +27,10 @@
 5. commit は Takumi様。
 
 ---
+## 最終配置（2026-10-17 確定）
+`app/CLAUDE.md`（Claude Code が読むため `app/`）／`NBA_news/README.md`・`NBA_news/setup.md`（直下）。
+**残作業（Claude Code 可・`app/CLAUDE.md` のみ）**：①ツリーを新配置に合わせる（`setup.md`・`README.md` を `NBA_news/` 直下へ、`CLAUDE.md` は `app/` のまま）②設計書参照パスは `app/CLAUDE.md` から見て `docs/…`（`app/docs/…` と書くと `app/` 起点で解決できない）。リポジトリルート起点で書くなら「パスはリポジトリルート起点」と明記。③`.env.example` は `app/` のまま。
+
 ## 手動実施用チェックリスト（Takumi様）
 1. 直下の既存 `README.md`・`setup.md` は `app/` 側の新版で上書き（旧版は git 履歴に残る）。`git mv` で移動（`app/` 側は削除される）。
 2. 移動後、各文書内のパスを直す：`docs/` → `app/docs/`、`backend/`・`frontend/` → `app/backend/`・`app/frontend/`（`cd` 手順を含む）。`CLAUDE.md` のツリーは `NBA_news/` 直下に3文書・`render.yaml`・`.github/`、`app/` 配下に `backend/`・`frontend/`・`docs/`・`.env.example` となるよう直し、「`app/` の外」注記を整理。
