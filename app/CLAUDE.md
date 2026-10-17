@@ -7,7 +7,7 @@ NBAニュース翻訳アプリ（個人利用・著作権法第30条の私的利
 ## 技術スタック
 - バックエンド：Python 3.11 / FastAPI / SQLAlchemy ＋ PostgreSQL（Neon・psycopg 3）※ローカル開発の既定は SQLite / slowapi（ログインのレート制限）/ feedparser / requests
 - バッチ：GitHub Actions（cron）→ `backend/run_batch_once.py`。APScheduler はローカル開発用（本番 Render は `ENABLE_SCHEDULER=false`）
-- フロントエンド：React 18 / Vite / Tailwind CSS
+- フロントエンド：React 19 / Vite 8 / Tailwind CSS 3 / Vitest・Testing Library（テスト）
 - 外部API：Claude API（claude-haiku-4-5-20251001）/ BALLDONTLIE API / RSS
 - ホスティング・監視：Render（無料プラン）/ Neon（無料枠）/ healthchecks.io（外部 cron 監視）
 
