@@ -38,6 +38,7 @@ NBA_news/
 ├── .github/workflows/
 │   └── batch.yml              # バッチ（GitHub Actions cron）
 ├── .env.example
+├── .env                       # 各自作成（Git 管理外）
 ├── setup.md                   # 環境構築手順
 ├── README.md
 └── app/
@@ -100,8 +101,8 @@ NBA_news/
 ### 2. .env の準備
 
 ```bash
-cp .env.example app/backend/.env
-# app/backend/.env を開き以下の変数を記入
+cp .env.example .env   # リポジトリルート（NBA_news/）で実行
+# ルートの .env を開き以下の変数を記入
 # ANTHROPIC_API_KEY / BALLDONTLIE_API_KEY / SECRET_KEY（任意の長い文字列）/ USERNAME / USER_PASSWORD
 ```
 
@@ -153,7 +154,7 @@ cd app/frontend && npm run dev
 
 ## 環境変数
 
-`.env.example` を参考に `app/backend/.env` を作成してください。
+`.env.example` を参考に、リポジトリルート（`NBA_news/`）に `.env` を作成してください。
 
 | 変数名 | 説明 | 取得先 |
 |---|---|---|

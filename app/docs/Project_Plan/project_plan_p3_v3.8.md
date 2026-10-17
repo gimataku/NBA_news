@@ -698,7 +698,7 @@ Section C の実施だけでは**フェーズ2は文書上クローズされな�
 | **7-A-10** | **移行の実行**（リスク調査書§1-4-9 の11ステップを **Blueprint 版に組み替えた `instruction_7-A-10.md` v2** に従う）＋**Health Check 通知の継続可否の再判定**＋**7-A-10c（`main.py` の `ENABLE_SCHEDULER` 分岐）** | **Takumi様**（Neon／Render／GitHub Secrets）＋Claude Code（7-A-10c） | 環境設定・`main.py`・`tests/test_main_scheduler.py`（新規） | **2026-10-19まで** | ✅（**2026-10-14 完了・期限内**。切替・動作確認 ✅。**ステップ10〜13・後片付け ✅（定時実行2回成功・Auto-Deploy＝On Commit・Health Check 通知は監視手段に数えず `healthCheckPath` は残す・`render.yaml` 編集なし・`models.py` 旧コード削除済み）**） |
 | **7-A-11** | **`/api/fetch` と `test_post_fetch()` の削除** | Claude Code | `api/routes.py`・`tests/test_routes.py` | **7-A-10 の後** | ✅（**2026-10-14 完了**。`pytest` 98 passed・本番で認証なし `POST /api/fetch` が 404。**既存テスト `test_t10` が秒境界で不安定**＝手順8へ引き継ぎ） |
 | **7-A-12** | **外部cron監視の導入**（サービス選定・ping処理） | **Takumi様**（アカウント）＋Claude Code（ping） | `run_batch_once.py` | 7-A-10 と前後 | ✅（**2026-10-16 完了**。healthchecks.io・期間4h＋猶予5h・cron を `:23` に変更・テスト通知到達・定時実行で ping 受信を確認。**猶予の締め直しは約1週間後**。基本設計書§6-2-2 の値は次の改版で整合） |
-| **7-A-13** | **プロジェクトドキュメント追従更新** | Claude Code | `README.md`・`CLAUDE.md`・`setup.md` | **7-A の最後**（**13a は開幕前に先行**） | 🔄（**13a ✅ 実施済み・2026-10-17**／積み残し2件を 13a-2 で調査中：移行・レート制限・CORS・運用の反映。13b＝フロントのテスト手順・表記統一・最終 grep は 7-A-6〜8 の後） |
+| **7-A-13** | **プロジェクトドキュメント追従更新** | Claude Code | `README.md`・`CLAUDE.md`・`setup.md` | **7-A の最後**（**13a は開幕前に先行**） | 🔄（**13a ✅ 完了・2026-10-17**（配置・パス・`.env` 位置も解決）：移行・レート制限・CORS・運用の反映。13b＝フロントのテスト手順・表記統一・最終 grep は 7-A-6〜8 の後） |
 
 **7-A-0 の内容（Takumi様の確認事項）**
 

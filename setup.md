@@ -41,7 +41,7 @@ pip install -r requirements.txt
 
 ## 2. 環境変数の設定
 
-`app/backend/.env` を新規作成し、以下の5項目をすべて設定する：
+リポジトリルート（`NBA_news/`）に `.env` を新規作成し、以下の5項目をすべて設定する：
 
 ```
 ANTHROPIC_API_KEY=sk-ant-xxxxx
@@ -144,16 +144,16 @@ npm run dev
 
 ### RuntimeError: SECRET_KEY が未設定です
 
-`app/backend/.env` に `SECRET_KEY=` の行が存在するか確認してください。
+リポジトリルートの `.env` に `SECRET_KEY=` の行が存在するか確認してください。
 値が空文字の場合も同じエラーになります。`openssl rand -hex 32` で生成した値を設定してください。
 
 ### RuntimeError: USERNAME / USER_PASSWORD が未設定です
 
-`app/backend/.env` に `USERNAME=` と `USER_PASSWORD=` が両方設定されているか確認してください。
+リポジトリルートの `.env` に `USERNAME=` と `USER_PASSWORD=` が両方設定されているか確認してください。
 
 ### RuntimeError: ANTHROPIC_API_KEY / BALLDONTLIE_API_KEY が未設定です
 
-`app/backend/.env` に `ANTHROPIC_API_KEY=` と `BALLDONTLIE_API_KEY=` が両方設定されているか確認してください。
+リポジトリルートの `.env` に `ANTHROPIC_API_KEY=` と `BALLDONTLIE_API_KEY=` が両方設定されているか確認してください。
 
 ### ModuleNotFoundError: No module named 'psycopg' / 'psycopg2'
 
