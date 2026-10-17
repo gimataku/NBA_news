@@ -790,7 +790,7 @@ def startup_event() -> None:
 
 ## 7-A-5：F-18・F-19・F-21 ＋ `cors_client` フィクスチャ
 
-**状態：🔄 実装・ローカル検証 ✅（2026-10-17）／commit・push・本番確認（特に PUT のトグル保存）が残る｜前提 ✅**
+**状態：✅ 完了（2026-10-17）｜本番確認 ✅（トグル保存＝`PUT` の CORS 通過・プリフライト 200／400）｜前提 ✅**
 
 | 項目 | 内容 |
 |---|---|
@@ -804,7 +804,7 @@ def startup_event() -> None:
 | 変更内容 | 2026-10-17 | `routes.py`：`get_schedule` の `start_date`／`end_date` を `date` 型に・`crud` へは `.isoformat()`・先頭に `from datetime import date`。`jwt.py`：`utcnow()` → `datetime.now(timezone.utc)`（**実測 L16**）・import に `timezone`。`test_routes.py`：L119 の1行のみ置換。`config.py`：`CORS_ALLOW_METHODS=["GET","POST","PUT"]`・`CORS_ALLOW_HEADERS=["Authorization","Content-Type"]`。`main.py`：定数を import して `add_middleware` に使用（`allow_origins`・`allow_credentials` は不変）。`conftest.py`：`cors_client` 追加。新規：`test_schedule_date.py`（TC-02-1〜6）・`test_jwt_token.py`（TC-04-1〜4）・`test_cors.py`（TC-05-1〜11） | ✅ | なし |
 | 動作確認（ローカル） | 2026-10-17 | `pytest` **133 passed**（112＋6＋4＋11）。**警告は10件→4件**（`utcnow()` の `DeprecationWarning` が消えた。残る4件は `main.py` の `@app.on_event` の非推奨で範囲外）。TC-04-5：`grep utcnow` **0件**。`main.py` に `allow_*=["*"]` なし。`CORS_ALLOW` の値の直書きは `config.py` のみ。ルートの増減なし。差分は9ファイル（新規3）・`test_routes.py` は1行 | ✅ | なし |
 | コードレビュー | 2026-10-17 | 変更後のコードを設計§2-1-2・§2-3・§2-4-1・§2-6 と突合。**実挙動の確認**：Starlette 1.1.0（FastAPI 0.136.3）で、許可されないプリフライトは指示どおり **400**（期待値は緩めていない）。TC-05-9 は `Access-Control-Allow-Origin` が返らないことも確認。`Middleware.kwargs` は Starlette 1.1.0 で実在（テスト設計書§9 #15 の再確認）。TC-02-1 は期間の外側（前日・翌日）の行も投入。TC-04-4 は署名の先頭1文字を書き換えて作成 | ✅ | なし（**テスト設計書の記載の Starlette 1.3.1 と実環境 1.1.0 の差**は、`kwargs` の実在確認で影響なし） |
-| 本番確認（push 後・指示文§7） | — | ログイン・一覧・**トグル保存（`PUT /api/settings`）**・試合日程タブ・コンソールに CORS エラーなし | ⬜ | Takumi様の確認待ち |
+| 本番確認（push 後・指示文§7） | 2026-10-17 | ログイン・一覧・ステータス・**トグル／チームフィルタの保存（`PUT /api/settings`）が再読込後も保持**・試合日程タブ・コンソールに CORS エラーなし、すべて ✅。PowerShell のプリフライト（`PUT`＝200・`DELETE`＝400）も ✅ | ✅ | なし。**テスト設計書 §9 #13（実ブラウザでの `PUT` の CORS 確認）を消化** |
 
 **⚠️ 実装時の注意**
 
@@ -1346,7 +1346,9 @@ def startup_event() -> None:
 
 ## 7-A-13：プロジェクトドキュメント追従更新
 
-**状態：⬜ 未実施｜⚠️ 7-A の最後**
+**状態：🔄 **13a ✅ 実施済み・検証 #1〜#6 すべて合格（2026-10-17。`CLAUDE.md`・`setup.md`・`README.md` を更新。`.env` を読まないルールを `CLAUDE.md` セキュリティ節冒頭に明記［Takumi様決定］。README の手書き pip 一覧を削除。commit は Takumi様の確認後）。積み残し2件（`.env` の置き場所の食い違い＝setup.md は `app/backend/.env`／README は `app/`、ルート直下の重複 README.md・setup.md）は `instruction_7-A-13a2.md` で調査→報告。**Takumi様決定（2026-10-17）：3文書を `NBA_news/` 直下（元の場所）へ `git mv`、直下の既存重複は `app/` 側の新版で上書き → `instruction_7-A-13a3.md`（相対パス修正・`.env` 位置統一・13a 検証再実行を含む）**／13b（フロントのテスト手順・表記統一・最終 grep）は 7-A-6〜8 の完了後｜⚠️ 7-A の最後（13b）**
+
+> **2分割した理由（2026-10-17）**：`CLAUDE.md` は Claude Code が実装前に読む指示書で、**「cron方式は使用しない」「APSchedulerで10分ごとにチェック」「SQLite3」など移行後と正反対の記述が残っている**。7-A-6〜8 の完了を待たずに、**すでに確定している事実（移行・レート制限・CORS・無料プランの制約・F7/F8 の教訓）だけを先に反映する**（開幕 10-20 の前）。フロントのテスト手順（7-A-8 待ち）・用語統一（7-A-6/7 待ち）は 13b。**README の手書き `pip install` 一覧が `psycopg[binary]`・`slowapi` を含まない**ことも 13a で是正する
 
 | 項目 | 内容 |
 |---|---|
