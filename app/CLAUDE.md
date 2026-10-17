@@ -138,4 +138,5 @@ NBA_news/                      # リポジトリルート（Claude Code の作�
 - `app/backend` から `pytest`。**`DATABASE_URL` を外して実行する**（PowerShell：`Remove-Item Env:\DATABASE_URL -ErrorAction SilentlyContinue`）
 - `conftest.py` はシークレット5件と `DATABASE_URL` にダミー値を無条件代入し、`.env` を読まない（`load_dotenv` なし）。テスト用 DB は `conftest.py` 自前のエンジン（SQLite）
 - 既知：`test_crud.py::test_t10_delete_old_articles` は秒境界で不安定（本番コードは正しい・別途修正予定）
-- 件数は実測値で確認する（2026-10-17 時点で 133 passed）
+- 件数は実測値で確認する（2026-10-18 時点で 138 passed）
+- フロントエンド：`app/frontend` から `npm test`（vitest run）／`npm run test:cov`（カバレッジ）。テストは `src/__tests__/`。記述規約：クラス名・`▶`/`▼`・CSS でアサートしない／`getByRole`・`getByText` で取る／`data-testid` は最後の手段。`vite.config.js` に `envPrefix` を設定しない（環境変数がブラウザに配信される）

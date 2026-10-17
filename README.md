@@ -22,7 +22,7 @@
 | レイヤー | 使用技術 |
 |---|---|
 | バックエンド | Python 3.11 / FastAPI / SQLAlchemy / PostgreSQL（Neon）※ローカル既定は SQLite / slowapi / APScheduler（ローカル開発用） |
-| フロントエンド | React 18 / Vite / Tailwind CSS |
+| フロントエンド | React 18 / Vite / Tailwind CSS / Vitest・Testing Library（テスト） |
 | 外部API | Claude API / BALLDONTLIE API / RSS |
 | バッチ | GitHub Actions（cron）→ `app/backend/run_batch_once.py` |
 | ホスティング | Render（無料プラン：Web Service＋Static Site）/ Neon（無料枠） |
@@ -135,6 +135,15 @@ cd app/frontend && npm run dev
 ブラウザで `http://localhost:5173` を開くと画面が表示されます。
 
 ローカル開発（`ENABLE_SCHEDULER` 既定 true）では、起動後に初回バッチが自動実行されRSSが取得されます。その後は4時間ごとに自動更新されます。本番（Render）ではバッチを動かさず、GitHub Actions がバッチを実行します。
+
+---
+
+## テスト
+
+- バックエンド：`app/backend` から `pytest`（`DATABASE_URL` を外して実行）
+- フロントエンド：`app/frontend` から `npm test`／`npm run test:cov`
+
+詳細は [setup.md](./setup.md) を参照してください。
 
 ---
 

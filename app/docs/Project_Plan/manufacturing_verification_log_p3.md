@@ -865,7 +865,11 @@ def startup_event() -> None:
 
 ## 7-A-8：フロントエンドのテスト基盤導入
 
-**状態：🔄 指示文作成済み（2026-10-18・`instruction_7-A-8.md`）。動作確認用に T-P3-13（FilterBar・TC-13-1〜3）を前倒しで実装する（テストが0件だと `vitest run` が失敗するため）**
+**状態：✅ 完了（2026-10-18。実装・commit・Render Static Site のビルド成功［Takumi様確認］）**
+
+実施結果：`vitest`／`@vitest/coverage-v8` **5.0.5**（同一版・同時導入）、`@testing-library/react` 16.3.3、`@testing-library/dom` 10.4.2、`jest-dom` 7.0.1、`user-event` 14.6.8、`jsdom` 30.1.3（react 19.2.6／vite 8.0.14）。peer 確認：vitest の peer `vite ^6.4.0\|\|^7\|\|^8` に適合・coverage-v8 は vitest 5.0.5 固定・RTL の peer `react ^18\|\|^19` に適合（§9 #12 完了）。`defineConfig` は `vite` のままで `test` キーが受理される。動作確認用に T-P3-13（FilterBar・TC-13-1〜3）を前倒し実装：`npm test` 3 passed。`test:cov` 成功・**`App.jsx` がレポートに現れる（0%）＝§9 #7 完了**。`FilterBar.jsx` は Stmts 100%／Branch 50%（true 側の分岐は未テスト）。`envPrefix` 0件（§9 #11）。`build` 成功（dist に vitest 等の混入なし）。バックエンド pytest 138 passed のまま。
+
+**発見事項**：①`npm run lint` が 4 エラー（**すべて作業前から存在**。`src/hooks/useNews.js`：L5・L6 `no-unused-vars`＝引き継ぎ #9 の未使用定数、L10 `react-hooks/refs`、L101 `react-hooks/set-state-in-effect`。stash で原状も 4 件を確認）。lint は CI・ビルドに含まれず本番影響なし。**F-13／F-15（7-B）で `useNews.js` を改修する際に解消する**。②`npm audit` 14 件（low 1／moderate 2／high 11）。今回の導入前のロックファイルでも同数で、**今回の追加分ではない**。対象：@babel/core・braces・brace-expansion・nanoid・postcss・vite（8.0.0–8.0.15）ほか。`npm audit fix` は未実施 → **7-B の依存関係確認で内容（開発時のみか本番ビルドに影響するか）を精査して判断**。③vitest 導入で既存の推移依存 7 件が同一メジャー内で更新（@babel/* 4件・picomatch ほか）。④CLAUDE.md のテスト件数 133 → 138 に更新済み。
 
 | 項目 | 内容 |
 |---|---|
@@ -1348,7 +1352,7 @@ def startup_event() -> None:
 
 ## 7-A-13：プロジェクトドキュメント追従更新
 
-**状態：13a ✅ 完了（2026-10-17。最終配置＝`app/CLAUDE.md`／`NBA_news/README.md`・`setup.md`・`.env.example`。`.env` の正しい位置＝**リポジトリルート `NBA_news/.env`**（Takumi様確認。`config.py` の `load_dotenv()` は引数なしで `app/backend` から上方向に探索するためルートに届く。**先に書いた `app/backend/.env` は誤り→文書を訂正**。Claude Code の作業範囲内には `.env` を置かない）。13a-2 A・B、13a-3 も解決）。13b は 7-A-6〜8 の後 ⬜（以下は13a 実施時の記録）｜🔄 **13a ✅ 実施済み・検証 #1〜#6 すべて合格（2026-10-17。`CLAUDE.md`・`setup.md`・`README.md` を更新。`.env` を読まないルールを `CLAUDE.md` セキュリティ節冒頭に明記［Takumi様決定］。README の手書き pip 一覧を削除。commit は Takumi様の確認後）。積み残し2件（`.env` の置き場所の食い違い＝setup.md は `app/backend/.env`／README は `app/`、ルート直下の重複 README.md・setup.md）は `instruction_7-A-13a2.md` で調査→報告。**実施結果（Takumi様手動・2026-10-17）：`CLAUDE.md` は Claude Code に読み込ませるため `app/` に置く（完了）。`README.md`・`setup.md` は `NBA_news/` 直下へ移動し、パス変更も完了。残件＝`app/CLAUDE.md` のツリー・設計書パスが新配置と不整合（`instruction_7-A-13a3.md` 参照）。〔当初決定：3文書を `NBA_news/` 直下（元の場所）へ `git mv`、直下の既存重複は `app/` 側の新版で上書き → `instruction_7-A-13a3.md`（相対パス修正・`.env` 位置統一・13a 検証再実行を含む）**／13b（フロントのテスト手順・表記統一・最終 grep）は 7-A-6〜8 の完了後｜⚠️ 7-A の最後（13b）**
+**状態：✅ 13a・13b とも完了（2026-10-18。13b＝setup.md の件数 138・フロントのテスト手順、README のスタック表・テスト節を反映。最終 grep［`133 passed|チームのみ|app/backend/.env` ほか］を `README.md`・`setup.md`・`app/CLAUDE.md` に実行し 0 件［Takumi様確認］）。以下は 13a 実施時の記録｜**状態：13a ✅ 完了（2026-10-17。最終配置＝`app/CLAUDE.md`／`NBA_news/README.md`・`setup.md`・`.env.example`。`.env` の正しい位置＝**リポジトリルート `NBA_news/.env`**（Takumi様確認。`config.py` の `load_dotenv()` は引数なしで `app/backend` から上方向に探索するためルートに届く。**先に書いた `app/backend/.env` は誤り→文書を訂正**。Claude Code の作業範囲内には `.env` を置かない）。13a-2 A・B、13a-3 も解決）。13b ＝`instruction_7-A-13b.md`：共有された README／setup（直下の現行版）に Claude が編集を実施（2026-10-18・件数138・フロントのテスト手順・テスト節・スタック表。旧記述 grep 0件）→ Takumi様の上書き配置待ち 🔄（以下は13a 実施時の記録）｜🔄 **13a ✅ 実施済み・検証 #1〜#6 すべて合格（2026-10-17。`CLAUDE.md`・`setup.md`・`README.md` を更新。`.env` を読まないルールを `CLAUDE.md` セキュリティ節冒頭に明記［Takumi様決定］。README の手書き pip 一覧を削除。commit は Takumi様の確認後）。積み残し2件（`.env` の置き場所の食い違い＝setup.md は `app/backend/.env`／README は `app/`、ルート直下の重複 README.md・setup.md）は `instruction_7-A-13a2.md` で調査→報告。**実施結果（Takumi様手動・2026-10-17）：`CLAUDE.md` は Claude Code に読み込ませるため `app/` に置く（完了）。`README.md`・`setup.md` は `NBA_news/` 直下へ移動し、パス変更も完了。残件＝`app/CLAUDE.md` のツリー・設計書パスが新配置と不整合（`instruction_7-A-13a3.md` 参照）。〔当初決定：3文書を `NBA_news/` 直下（元の場所）へ `git mv`、直下の既存重複は `app/` 側の新版で上書き → `instruction_7-A-13a3.md`（相対パス修正・`.env` 位置統一・13a 検証再実行を含む）**／13b（フロントのテスト手順・表記統一・最終 grep）は 7-A-6〜8 の完了後｜⚠️ 7-A の最後（13b）**
 
 > **2分割した理由（2026-10-17）**：`CLAUDE.md` は Claude Code が実装前に読む指示書で、**「cron方式は使用しない」「APSchedulerで10分ごとにチェック」「SQLite3」など移行後と正反対の記述が残っている**。7-A-6〜8 の完了を待たずに、**すでに確定している事実（移行・レート制限・CORS・無料プランの制約・F7/F8 の教訓）だけを先に反映する**（開幕 10-20 の前）。フロントのテスト手順（7-A-8 待ち）・用語統一（7-A-6/7 待ち）は 13b。**README の手書き `pip install` 一覧が `psycopg[binary]`・`slowapi` を含まない**ことも 13a で是正する
 

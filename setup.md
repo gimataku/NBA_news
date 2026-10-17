@@ -136,7 +136,18 @@ npm run dev
   pytest
   ```
 
-2026-10-17 時点で 133 passed。`test_crud.py::test_t10_delete_old_articles` は秒境界で失敗することがある（既知・本番コードは正しい）。
+2026-10-18 時点で 138 passed。`test_crud.py::test_t10_delete_old_articles` は秒境界で失敗することがある（既知・本番コードは正しい）。
+
+### フロントエンドのテスト
+
+`app/frontend/` ディレクトリから実行する（初回は `npm install` が必要）：
+
+```
+npm test          # テスト実行（vitest）
+npm run test:cov  # カバレッジ付き（coverage/ に出力。Git 管理外）
+```
+
+テストは `app/frontend/src/__tests__/` に置く。記述規約：クラス名・`▶`/`▼` の記号・CSS をアサートしない／要素は `getByRole`・`getByText` で取る／`data-testid` は最後の手段。
 
 ---
 

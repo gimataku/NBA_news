@@ -693,12 +693,12 @@ Section C の実施だけでは**フェーズ2は文書上クローズされな�
 | **7-A-5** | **F-18・F-19・F-21**（日付検証／`utcnow()` 置換／CORS限定）＋**`cors_client` フィクスチャの追加** | Claude Code | `api/routes.py`・`auth/jwt.py`・`tests/test_routes.py`・`main.py`・`config.py`・**`tests/conftest.py`** | — | ✅（**2026-10-17 完了**。`pytest` 133 passed・警告10→4件・本番でトグル保存（`PUT` の CORS）を確認。T-P3-02・04・05 は前倒し実装済み） |
 | **7-A-6** | **F-14 ラベル変更** | Claude Code | `components/FilterBar.jsx` | — | ✅（2026-10-17 実装・commit・デプロイ後の画面確認まで完了） |
 | **7-A-7** | **F-16 表記統一**（`GLOSSARY`） | Claude Code＋**Takumi様**（選手名の確定） | `processor/claude_client.py` | — | 🔄（✅ 実装完了（2026-10-17・138 passed）。commit・push 後の初回バッチ確認待ち。トークン増は設計の想定超過（約700〜1,000/記事）→ 7-B の費用再確認で実測） |
-| **7-A-8** | **フロントエンドのテスト基盤導入** | Claude Code | `package.json`・`vite.config.js`・`src/setupTests.js`（新規） | — | 🔄（指示文 `instruction_7-A-8.md` 作成済み・2026-10-18） |
+| **7-A-8** | **フロントエンドのテスト基盤導入** | Claude Code | `package.json`・`vite.config.js`・`src/setupTests.js`（新規） | — | ✅（2026-10-18 実装・commit 済み。vitest 5.0.5・T-P3-13 前倒し・Static Site ビルド成功確認済み。lint 既存4件・npm audit 14件は 7-B へ） |
 | **7-A-9** | **移行用の新規成果物の作成** | Claude Code | `run_batch_once.py`（新規）・`.github/workflows/batch.yml`（新規）・`db/models.py`・`requirements.txt` | — | ✅（**2026-10-13 完了**。9a＝`app/` 配下／9b＝`batch.yml`（`app/` の外・Takumi様）／**9c（`models.py` の切替）は 7-A-10 ステップ2へ移管**） |
 | **7-A-10** | **移行の実行**（リスク調査書§1-4-9 の11ステップを **Blueprint 版に組み替えた `instruction_7-A-10.md` v2** に従う）＋**Health Check 通知の継続可否の再判定**＋**7-A-10c（`main.py` の `ENABLE_SCHEDULER` 分岐）** | **Takumi様**（Neon／Render／GitHub Secrets）＋Claude Code（7-A-10c） | 環境設定・`main.py`・`tests/test_main_scheduler.py`（新規） | **2026-10-19まで** | ✅（**2026-10-14 完了・期限内**。切替・動作確認 ✅。**ステップ10〜13・後片付け ✅（定時実行2回成功・Auto-Deploy＝On Commit・Health Check 通知は監視手段に数えず `healthCheckPath` は残す・`render.yaml` 編集なし・`models.py` 旧コード削除済み）**） |
 | **7-A-11** | **`/api/fetch` と `test_post_fetch()` の削除** | Claude Code | `api/routes.py`・`tests/test_routes.py` | **7-A-10 の後** | ✅（**2026-10-14 完了**。`pytest` 98 passed・本番で認証なし `POST /api/fetch` が 404。**既存テスト `test_t10` が秒境界で不安定**＝手順8へ引き継ぎ） |
 | **7-A-12** | **外部cron監視の導入**（サービス選定・ping処理） | **Takumi様**（アカウント）＋Claude Code（ping） | `run_batch_once.py` | 7-A-10 と前後 | ✅（**2026-10-16 完了**。healthchecks.io・期間4h＋猶予5h・cron を `:23` に変更・テスト通知到達・定時実行で ping 受信を確認。**猶予の締め直しは約1週間後**。基本設計書§6-2-2 の値は次の改版で整合） |
-| **7-A-13** | **プロジェクトドキュメント追従更新** | Claude Code | `README.md`・`CLAUDE.md`・`setup.md` | **7-A の最後**（**13a は開幕前に先行**） | 🔄（**13a ✅ 完了・2026-10-17**（配置・パス・`.env` 位置も解決）：移行・レート制限・CORS・運用の反映。13b＝フロントのテスト手順・表記統一・最終 grep は 7-A-6〜8 の後） |
+| **7-A-13** | **プロジェクトドキュメント追従更新** | Claude Code | `README.md`・`CLAUDE.md`・`setup.md` | **7-A の最後**（**13a は開幕前に先行**） | ✅（2026-10-18 完了。13a・13b とも反映済み・最終 grep 0件） |
 
 **7-A-0 の内容（Takumi様の確認事項）**
 
@@ -735,7 +735,7 @@ Section C の実施だけでは**フェーズ2は文書上クローズされな�
 | ✅ 完了 | 7-A-0・7-A-1・**7-A-3**・**7-A-9**（いずれも `manufacturing_verification_log_p3.md` に記録）。**7-A-10 の切替（7A〜7C）と動作確認（9A〜9C）**。Neon（`postgresql+psycopg`）で稼働・ログイン・一覧・`/healthz` 200 |
 | ❌ 未達 | **7-A-2**（先-2：通知が届かない＝F2。7-A-10 ステップ12 で再挑戦／廃止を決定） |
 | ✅ 完了 | **7-A-10**（2026-10-14）：ステップ10（`batch.yml` の `schedule:` 解除）は ✅（**定時実行2回成功・ただし10:00の枠が欠落＝7-A-12 の猶予設計に反映**）。ステップ11（Auto-Deploy＝On Commit）・12/13（Health Check 通知は監視手段に数えず・`healthCheckPath` は残す）・`models.py` 旧コード削除も ✅。**未達は 7-A-2（F2）のみ**で 7-A-12 で代替 |
-| ⬜ 未着手 | 7-A-4〜7-A-8（**移行後に回してよい**。シーズンデータに依存しない）／7-A-11（7-A-10 の後）／7-A-12／7-A-13 |
+| ✅ 完了（2026-10-18） | 7-A-4〜7-A-8・7-A-11・7-A-12・7-A-13（**7-A-2 を除き 7-A は完了**。7-A-2 は監視を healthchecks.io で代替） |
 
 | # | 7-A-10 の実施で判明し、他の工程へ引き継ぐ事項 | 引き継ぎ先 |
 |---|---|---|
