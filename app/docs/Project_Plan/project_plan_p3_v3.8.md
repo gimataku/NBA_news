@@ -687,12 +687,12 @@ Section C の実施だけでは**フェーズ2は文書上クローズされな�
 |---|---|---|---|---|---|
 | **7-A-0** | **着手前確認**（下記①〜③） | **Takumi様** | — | **最優先** | ✅（**2026-09-12 完了**。`render.yaml` は Blueprint 連携＝状態A） |
 | **7-A-1** | **先-1：`config.py` の必須チェックの用途別分離** | Claude Code | `config.py`・`auth/jwt.py`・`auth/users.py` | **2026年9月中** | ✅（**2026-09-19 完了**・期限内。製造検証ログに記録。**テスト設計書の前提誤り2件を検出し v0.6 で是正**） |
-| **7-A-2** | **先-2：Render Health Check通知の有効化** | **Takumi様**（ダッシュボード） | なし（設定のみ） | **2026年9月中** | ❌ **未達で確定**（2026-10-08・Takumi様判断。Health Check Path は有効だが**通知が届かない**＝F2。**再挑戦／廃止の決定は 7-A-10 ステップ12**） |
+| **7-A-2** | **先-2：Render Health Check通知の有効化** | **Takumi様**（ダッシュボード） | なし（設定のみ） | **2026年9月中** | ❌ 未達で確定（2026-10-08）→ 🗑️ **廃止**（2026-10-21・Takumi様決定。Health Check Path は有効だが**通知が届かない**＝F2。通知は healthchecks.io で代替） |
 | **7-A-3** | **ステータスAPI拡張**（運用指標） | Claude Code | `db/crud.py`・`api/routes.py`・`hooks/useNews.js` | **移行より先** | ✅（**2026-10-13 完了**。基準値 `total_articles`=358／`articles_last_7d`=91。`config.py` の `METRICS_WINDOW_DAYS` も範囲に含めた） |
 | **7-A-4** | **F-17 レートリミット**（`slowapi` 導入・`forwarded_allow_ips`・429のUI）＋**`conftest.py` の改修**（`app.state.limiter`・`reset_rate_limit`・`.env` 読み込みの削除） | Claude Code | `api/limiter.py`（新規）・`api/routes.py`・`main.py`・`config.py`・`requirements.txt`・`hooks/useAuth.js`・`components/LoginForm.jsx`・**`tests/conftest.py`** | — | ✅（**2026-10-17 完了**。🔴**本番の偽装試験でレート制限のバイパスが成立（F8・2026-10-15）→ 7-A-4b（Render のヘッダ計測）→ 7-A-4c（キー関数を `CF-Connecting-IP`→`X-Forwarded-For` の右から2番目→`client.host` に変更）で解消**。T-P3-01 は前倒し実装済み（TC-01-7・8・K-1〜6 を追加）・T-P3-14 は 7-A-8 の後） |
 | **7-A-5** | **F-18・F-19・F-21**（日付検証／`utcnow()` 置換／CORS限定）＋**`cors_client` フィクスチャの追加** | Claude Code | `api/routes.py`・`auth/jwt.py`・`tests/test_routes.py`・`main.py`・`config.py`・**`tests/conftest.py`** | — | ✅（**2026-10-17 完了**。`pytest` 133 passed・警告10→4件・本番でトグル保存（`PUT` の CORS）を確認。T-P3-02・04・05 は前倒し実装済み） |
 | **7-A-6** | **F-14 ラベル変更** | Claude Code | `components/FilterBar.jsx` | — | ✅（2026-10-17 実装・commit・デプロイ後の画面確認まで完了） |
-| **7-A-7** | **F-16 表記統一**（`GLOSSARY`） | Claude Code＋**Takumi様**（選手名の確定） | `processor/claude_client.py` | — | 🔄（✅ 実装完了（2026-10-17・138 passed）。commit・push 後の初回バッチ確認待ち。トークン増は設計の想定超過（約700〜1,000/記事）→ 7-B の費用再確認で実測） |
+| **7-A-7** | **F-16 表記統一**（`GLOSSARY`） | Claude Code＋**Takumi様**（選手名の確定） | `processor/claude_client.py` | — | 🔄（✅ 完了（2026-10-17 実装・138 passed／2026-10-21 本番の初回バッチ成功・表記に違和感なし）。トークン増は設計の想定超過（約700〜1,000/記事）→ 7-B の費用再確認で実測） |
 | **7-A-8** | **フロントエンドのテスト基盤導入** | Claude Code | `package.json`・`vite.config.js`・`src/setupTests.js`（新規） | — | ✅（2026-10-18 実装・commit 済み。vitest 5.0.5・T-P3-13 前倒し・Static Site ビルド成功確認済み。lint 既存4件・npm audit 14件は 7-B へ） |
 | **7-A-9** | **移行用の新規成果物の作成** | Claude Code | `run_batch_once.py`（新規）・`.github/workflows/batch.yml`（新規）・`db/models.py`・`requirements.txt` | — | ✅（**2026-10-13 完了**。9a＝`app/` 配下／9b＝`batch.yml`（`app/` の外・Takumi様）／**9c（`models.py` の切替）は 7-A-10 ステップ2へ移管**） |
 | **7-A-10** | **移行の実行**（リスク調査書§1-4-9 の11ステップを **Blueprint 版に組み替えた `instruction_7-A-10.md` v2** に従う）＋**Health Check 通知の継続可否の再判定**＋**7-A-10c（`main.py` の `ENABLE_SCHEDULER` 分岐）** | **Takumi様**（Neon／Render／GitHub Secrets）＋Claude Code（7-A-10c） | 環境設定・`main.py`・`tests/test_main_scheduler.py`（新規） | **2026-10-19まで** | ✅（**2026-10-14 完了・期限内**。切替・動作確認 ✅。**ステップ10〜13・後片付け ✅（定時実行2回成功・Auto-Deploy＝On Commit・Health Check 通知は監視手段に数えず `healthCheckPath` は残す・`render.yaml` 編集なし・`models.py` 旧コード削除済み）**） |
@@ -733,7 +733,7 @@ Section C の実施だけでは**フェーズ2は文書上クローズされな�
 | 区分 | 内容 |
 |---|---|
 | ✅ 完了 | 7-A-0・7-A-1・**7-A-3**・**7-A-9**（いずれも `manufacturing_verification_log_p3.md` に記録）。**7-A-10 の切替（7A〜7C）と動作確認（9A〜9C）**。Neon（`postgresql+psycopg`）で稼働・ログイン・一覧・`/healthz` 200 |
-| ❌ 未達 | **7-A-2**（先-2：通知が届かない＝F2。7-A-10 ステップ12 で再挑戦／廃止を決定） |
+| 🗑️ 廃止（2026-10-21） | **7-A-2**（先-2：通知が届かない＝F2）：healthchecks.io［7-A-12］で代替できているため**再挑戦せず廃止**（Takumi様決定） |
 | ✅ 完了 | **7-A-10**（2026-10-14）：ステップ10（`batch.yml` の `schedule:` 解除）は ✅（**定時実行2回成功・ただし10:00の枠が欠落＝7-A-12 の猶予設計に反映**）。ステップ11（Auto-Deploy＝On Commit）・12/13（Health Check 通知は監視手段に数えず・`healthCheckPath` は残す）・`models.py` 旧コード削除も ✅。**未達は 7-A-2（F2）のみ**で 7-A-12 で代替 |
 | ✅ 完了（2026-10-18） | 7-A-4〜7-A-8・7-A-11・7-A-12・7-A-13（**7-A-2 を除き 7-A は完了**。7-A-2 は監視を healthchecks.io で代替） |
 
@@ -946,14 +946,14 @@ Section C の実施だけでは**フェーズ2は文書上クローズされな�
 | **レビュー結果報告書（各文書・各版）** | `review_project_plan_p3_v*.txt`・`review_requirements_p3_v*.txt` 等 | 手順1〜 | 🔄（**クリーンアップ削除対象外**。振り返り3-6対応） |
 | 要件定義書（フェーズ3） | `requirements_p3_v0.6.md` | 手順1 | ✅（レビュー3回・指摘22件を反映。**v0.6で手順6の決定＝コスト基準の金額化を反映**） |
 | リスク調査書（フェーズ3） | `risk_report_p3_v0.6.md` | 手順2 | ✅（レビュー6回実施。**v0.6の指摘は管理機構に関するもののみ**のため、調査内容をFixとして手順2を完了） |
-| 基本設計書（フェーズ3） | `basic_design_p3_v0.8.md` | 手順3 | ✅（レビュー5回・指摘31件を全件反映し完了。**手順4からの是正3件を反映済み**——v0.7でCORSの`PUT`・`ENABLE_SCHEDULER`のshutdown、**v0.8でDD-03（§1-2 に `App.jsx` ほか4件を追加）**）<br>**未反映の引き継ぎ：なし** ✅ |
-| 詳細設計書（フェーズ3） | `detail_design_p3_v0.4.md` | 手順4 | ✅（レビュー3回・指摘8件を全件反映し完了。**🔴・🟡は3版連続0件**） |
-| テスト設計書（フェーズ3） | **`test_design_p3_v0.6.md`** 🔧 | 手順5 | ✅（レビュー3回・指摘11件を全件反映し手順5を完了。**🔴は全版0件・🟡は最終版で0件**）<br>**⚠️ v0.6（2026-09-19）は製造フェーズからの是正**：7-A-1 で判明した前提誤り2件（T-P3-07 の検証方式が成立しない／§1-6-1 の「テストが実値で動く」が誤り）を反映。**手順5の完了判定は覆らない**——設計の欠落ではなく**前提の誤り**であり、製造の初回適用で検出された |
+| 基本設計書（フェーズ3） | `basic_design_p3_v0.9.md`（v0.8 は履歴。**v0.9＝2026-10-21・7-A の実装結果を反映。レビュー未実施**） | 手順3 | ✅（レビュー5回・指摘31件を全件反映し完了。**手順4からの是正3件を反映済み**——v0.7でCORSの`PUT`・`ENABLE_SCHEDULER`のshutdown、**v0.8でDD-03（§1-2 に `App.jsx` ほか4件を追加）**）<br>**未反映の引き継ぎ：なし** ✅ |
+| 詳細設計書（フェーズ3） | `detail_design_p3_v0.5.md`（v0.4 は履歴） | 手順4 | ✅（レビュー3回・指摘8件を全件反映し完了。**🔴・🟡は3版連続0件**）／**v0.5（2026-10-21）：7-A の製造結果［F8 ほか］を反映。レビューは未実施** |
+| テスト設計書（フェーズ3） | **`test_design_p3_v0.7.md`**（v0.6 は履歴。**v0.7＝2026-10-21・7-A の実測を反映。レビュー未実施**）🔧 | 手順5 | ✅（レビュー3回・指摘11件を全件反映し手順5を完了。**🔴は全版0件・🟡は最終版で0件**）<br>**⚠️ v0.6（2026-09-19）は製造フェーズからの是正**：7-A-1 で判明した前提誤り2件（T-P3-07 の検証方式が成立しない／§1-6-1 の「テストが実値で動く」が誤り）を反映。**手順5の完了判定は覆らない**——設計の欠落ではなく**前提の誤り**であり、製造の初回適用で検出された |
 | リスク評価書（フェーズ3） | `risk_evaluation_p3_v0.4.md` | 手順6 | ✅（レビュー1回・指摘3件を全件反映。**要望1の採用・コスト基準・先-2の要否を確定**）<br>**未決事項：なし** ✅ |
 | トレーサビリティマトリクス | 未定 | 手順7 | ⬜ |
 | ソースコード一式 | `backend/` `frontend/` | 手順7 | ⬜ |
 | **セキュリティレビュー結果（フェーズ3）** | 未定（**指摘対応表を含む**） | **手順7.5** | ⬜ |
-| **サブ手順動作確認・レビュー記録** 🆕 | `manufacturing_verification_log_p3.md` | 手順7 | 🔄（**7-A 完了・7-B 未着手**。2026-10-18 時点：7-A-0・1・3〜13 の動作確認・コードレビューを記録済み［7-A-7 は本番の初回バッチ確認のみ未記録］／7-A-2 ❌未達） |
+| **サブ手順動作確認・レビュー記録** 🆕 | `manufacturing_verification_log_p3.md` | 手順7 | 🔄（**7-A 完了・7-B 未着手**。2026-10-21 時点：7-A-0・1・3〜13 の動作確認・コードレビューを記録済み／7-A-2 ❌未達） |
 | **7-A 指示文・作業手順書** 🆕 | `instruction_7-A-3.md`・`instruction_7-A-9.md`・**`instruction_7-A-10.md`（v2）**・`instruction_7-A-10c_main_scheduler.md`・`runbook_7-A-10_block1.md`（v2） | 手順7 | 🔄（7-A-10 は実績ベースに書き直し済み。ステップ10〜13 の結果で確定） |
 | テストファイル一式 | `backend/tests/` | 手順8〜9 | ⬜ |
 | レビュー管理表 | 未定 | 手順3〜6・11 | ⬜ |

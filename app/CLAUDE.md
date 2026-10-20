@@ -69,9 +69,9 @@ NBA_news/                      # リポジトリルート（Claude Code の作�
 ## 設計書（必ず参照すること）
 （パスはリポジトリルート `NBA_news/` 起点。`app/` から見ると `docs/…`）
 - 要件定義書：app/docs/Requirement/requirements_p3_v0.6.md
-- 基本設計書：app/docs/Basic_Design/basic_design_p3_v0.8.md
-- 詳細設計書：app/docs/Detail_Design/detail_design_p3_v0.4.md
-- テスト設計書：app/docs/Test_Design/test_design_p3_v0.6.md
+- 基本設計書：app/docs/Basic_Design/basic_design_p3_v0.9.md
+- 詳細設計書：app/docs/Detail_Design/detail_design_p3_v0.5.md
+- テスト設計書：app/docs/Test_Design/test_design_p3_v0.7.md
 - リスク調査書：app/docs/Risk_Report/risk_report_p3_v0.6.md
 - リスク評価書：app/docs/Risk_Evaluation/risk_evaluation_p3_v0.4.md
 - 計画書：app/docs/Project_Plan/project_plan_p3_v3.8.md
