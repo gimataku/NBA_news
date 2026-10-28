@@ -16,6 +16,19 @@ jobs:
           python-version: '3.11'
           cache: pip
           cache-dependency-path: app/backend/requirements.txt
+
+      # SEC-1：pip < 26.2.2 は vendored certifi をシステムストアに加えて常に信頼し、
+      # 無効化する手段がない（python.org の告知）。依存の取得経路を先に塞ぐ。
+      - name: Upgrade pip
+        run: python -m pip install --upgrade "pip>=26.2.2"
+
+      # SEC-1：障害調査用に版を残す（恒久）。certifi は 2026.10.19 以降であること。
+      - name: Show versions
+        run: |
+          python -VV
+          python -m pip --version
+          python -c "import certifi; print('certifi', certifi.__version__)"
+
       - run: pip install -r app/backend/requirements.txt
       - name: Run batch
         working-directory: app/backend

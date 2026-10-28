@@ -71,6 +71,18 @@ def startup_event() -> None:
     else:
         logger.info("Scheduler disabled (ENABLE_SCHEDULER=false)")
 
+    # TEMP（SEC-1）：eMudhra 証明書拒否の確認。確認後に削除する。
+    import requests as _rq
+    for _u in ("https://dv-g3b-emudhra.we-have-a-problem.com/",
+               "https://dv-g3b-aaa-emudhra.we-have-a-problem.com/"):
+        try:
+            _r = _rq.get(_u, timeout=5)
+            logger.error("SEC-1 NG reachable %s %s", _r.status_code, _u)
+        except _rq.exceptions.SSLError:
+            logger.info("SEC-1 OK rejected %s", _u)
+        except Exception as _e:
+            logger.warning("SEC-1 ?? %s %s", type(_e).__name__, _u)
+
 
 @app.on_event("shutdown")
 def shutdown_event() -> None:

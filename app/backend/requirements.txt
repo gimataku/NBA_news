@@ -17,3 +17,5 @@ pytest-mock
 responses
 psycopg[binary]
 slowapi
+certifi>=2026.10.19
+sqlalchemy>=2.0

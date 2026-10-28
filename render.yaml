@@ -24,10 +24,12 @@ services:
         value: 0.0.0.0
       - key: DATABASE_URL
         sync: false
-      - key: ENABALE_SCHEDULER
+      - key: ENABLE_SCHEDULER
         value: "false"
       - key: ALLOWED_ORIGINS
         value: https://nba-news-frontend.onrender.com
+      - key: PYTHON_VERSION
+        value: 3.11.18
 
   # ---------- フロントエンド Static Site ----------
   - type: web
