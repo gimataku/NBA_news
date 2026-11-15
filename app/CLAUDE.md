@@ -69,9 +69,9 @@ NBA_news/                      # リポジトリルート（Claude Code の作�
 ## 設計書（必ず参照すること）
 （パスはリポジトリルート `NBA_news/` 起点。`app/` から見ると `docs/…`）
 - 要件定義書：app/docs/Requirement/requirements_p3_v0.6.md
-- 基本設計書：app/docs/Basic_Design/basic_design_p3_v0.10.md
-- 詳細設計書：app/docs/Detail_Design/detail_design_p3_v0.6.md
-- テスト設計書：app/docs/Test_Design/test_design_p3_v0.8.md
+- 基本設計書：app/docs/Basic_Design/basic_design_p3_v0.12.md
+- 詳細設計書：app/docs/Detail_Design/detail_design_p3_v0.8.md
+- テスト設計書：app/docs/Test_Design/test_design_p3_v0.10.md
 - リスク調査書：app/docs/Risk_Report/risk_report_p3_v0.6.md
 - リスク評価書：app/docs/Risk_Evaluation/risk_evaluation_p3_v0.4.md
 - 計画書：app/docs/Project_Plan/project_plan_p3_v3.8.md
@@ -108,6 +108,7 @@ NBA_news/                      # リポジトリルート（Claude Code の作�
   - GitHub の定時実行は**遅延・欠落しうる**（実測：約45〜50分遅れ・1枠の欠落あり）
 - **Render（本番 Web）は `ENABLE_SCHEDULER=false`**：APScheduler も起動時バッチも動かさない。`main.py` の `_scheduler_enabled()` が `scheduler.start()`・`check_and_run_batch()`・`scheduler.shutdown()` の3箇所を分岐する。**未設定なら true**
 - **ローカル開発**（既定 true）：APScheduler で10分ごとにチェックし、last_fetched_at=""（初回）または前回取得から4時間経過で実行する（この判定ロジックは従来どおり）
+- Python は **3.11.18 以降に固定**（eMudhra 証明書侵害対応・SEC-1）：`batch.yml` の `python-version: '3.11.18'`、`render.yaml` の `PYTHON_VERSION: 3.11.18`。`batch.yml` の `Show versions` は `pip install -r` の**後**に置く（certifi 未導入で失敗する）。`requirements.txt` の `certifi>=2026.10.19` を外さない
 - 外部 cron 監視：healthchecks.io（期間4時間＋猶予5時間）。`HEALTHCHECK_PING_URL` は **GitHub Actions のみに設定し、ローカルでは設定しない**（ローカル実行の ping が本番の停止を隠すため）。未設定なら ping をスキップ
 
 ### セキュリティ
